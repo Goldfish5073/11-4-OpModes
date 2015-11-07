@@ -471,7 +471,7 @@ public class Hardware extends OpMode {
         double l_return = -999;
         if (v_claw != null)
         {
-            l_return = v_claw.getPower() / 3;
+            l_return = v_claw.getPower() / 4;
         }
         return l_return;
     }
@@ -785,7 +785,7 @@ public class Hardware extends OpMode {
             //
             // TODO Implement stall code using these variables.
             //
-            if (Math.abs (v_motor_left_drive.getCurrentPosition ()) > p_count)
+            if (Math.abs (v_motor_left_drive.getCurrentPosition () * (diameter * Math.PI) / 1120) > p_count)
             {
                 //
                 // Set the status to a positive indication.
@@ -823,7 +823,7 @@ public class Hardware extends OpMode {
             //
             // TODO Implement stall code using these variables.
             //
-            if (Math.abs (v_motor_right_drive.getCurrentPosition ()) > p_count)
+            if (Math.abs (v_motor_right_drive.getCurrentPosition () * (diameter * Math.PI) / 1120) > p_count)
             {
                 //
                 // Set the status to a positive indication.
@@ -846,6 +846,9 @@ public class Hardware extends OpMode {
     /**
      * Indicate whether the drive motors' encoders have reached a value.
      */
+
+
+
     boolean have_drive_encoders_reached
     ( double p_left_count
             , double p_right_count

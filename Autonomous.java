@@ -4,6 +4,7 @@ import android.graphics.Color;
 
 import com.qualcomm.ftccommon.DbgLog;
 import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.GyroSensor;
 
 
 
@@ -15,6 +16,7 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 //TODO: register colorsensor in hardware, see why threw uncaught exception can't find hardware device "mr"
 public class Autonomous extends Hardware
 {
+    String step;
     FtcConfig ftcConfig=new FtcConfig();
 
     public Autonomous()
@@ -26,6 +28,8 @@ public class Autonomous extends Hardware
     private boolean isLeft;
 
     private ColorSensor sensorRGB;
+    private GyroSensor sensorGyro;
+
 
     //  hardwareMap.logDevices();
 
@@ -34,7 +38,8 @@ public class Autonomous extends Hardware
 
     // values is a reference to the hsvValues array.
     final float values[] = hsvValues;
-
+    int xVal, yVal, zVal = 0;
+    int heading = 0;
     boolean teamColorBlue;
 
     ReadBeacon readBeacon1 = new ReadBeacon();
@@ -43,6 +48,9 @@ public class Autonomous extends Hardware
     Delay delay1 = new Delay();
     Turn turn1 = new Turn();
     Drive drive1 = new Drive();
+    GyroTurn gyroTurn1 = new GyroTurn();
+    Pause pause1 = new Pause();
+    Drive driveButton1 = new Drive();
 
     @Override public void start ()
     {
@@ -50,6 +58,8 @@ public class Autonomous extends Hardware
         //Hardware start method
         super.start();
         reset_drive_encoders();
+        step = "start";
+
         try
         {
             sensorRGB = hardwareMap.colorSensor.get ("mr");
@@ -61,9 +71,31 @@ public class Autonomous extends Hardware
 
             sensorRGB = null;
         }
+        try
+        {
+            sensorGyro = hardwareMap.gyroSensor.get("gyro");
+        }
+        catch (Exception p_exception)
+        {
+            m_warning_message ("gyro sensor");
+            DbgLog.msg(p_exception.getLocalizedMessage());
+
+            sensorGyro = null;
+        }
 
         ftcConfig.init(hardwareMap.appContext, this);
         // sensorRGB = hardwareMap.colorSensor.get("mr");
+
+
+        readBeacon1.reset();
+        moveArm1.reset();
+        pressButton1.reset();
+        delay1.reset();
+        turn1.reset();
+        drive1.reset();
+        gyroTurn1.reset();
+        pause1.reset();
+        driveButton1.reset();
     } // start
 
     @Override public void loop ()
@@ -74,15 +106,33 @@ public class Autonomous extends Hardware
         telemetry.addData("ColorIsRed", Boolean.toString(ftcConfig.param.colorIsRed));
         telemetry.addData("DelayInSec", Integer.toString(ftcConfig.param.delayInSec));
         telemetry.addData("AutonType", ftcConfig.param.autonType);
+        telemetry.addData("Step: ", step);
+        telemetry.addData("Heading: ", heading);
 
 
-        if (delay1.action()) {
+       /* if (delay1.action()) {
+        } else if (gyroTurn1.action(1.0f, 60)){
         } else if (drive1.action(1.0f, 10)){
         } else if (turn1.action(1.0f, 10)){
         } else if (readBeacon1.action()) {
         } else if (moveArm1.action()) {
         } else if (pressButton1.action()) {
+        }*/
+
+        if (delay1.action()) {
+        }else if (drive1.action(1.0f, 30)) {
+        }else if (pause1.action()){
+        }else if (gyroTurn1.action(1.0f, 60)){
+            ///encoder in inches?
+        } else if (drive1.action(1.0f, 50)){
         }
+
+
+        else if (readBeacon1.action()) {
+        } else if (moveArm1.action()) {
+        } //else if (pressButton1.action()) {}
+        else if (driveButton1.action(0.5f, 2)){}
+
 
         if(gamepad1.a) {
             readBeacon1.reset();
@@ -213,6 +263,7 @@ public class Autonomous extends Hardware
             if (state == 1) {
                 return false;
             }
+            step = "readBeacon";
 
             color();
 
@@ -257,6 +308,7 @@ public class Autonomous extends Hardware
             if (state == 1) {
                 return false;
             }
+            step = "moveArm";
             push_beacon(isLeft);
 
             state = 1;
@@ -277,6 +329,7 @@ public class Autonomous extends Hardware
             if (state == 1){
                 return false;
             }
+            step = "pressButton";
 
             drive(1.0f, 2);
 
@@ -300,8 +353,34 @@ public class Autonomous extends Hardware
             if (state == 1) {
                 return false;
             }
+            step = "delay";
 
             if (System.currentTimeMillis() > (startTime + ftcConfig.param.delayInSec * 1000)) {
+                state = 1;
+            }
+
+            return true;
+        }
+    }
+
+    private class Pause {
+        int state;
+        long startTime;
+        Pause() {
+            state = -1;
+        }
+        void reset() { state = -1; }
+        boolean action() {
+            if (state == -1){
+                startTime = System.currentTimeMillis();
+                state = 0;
+            }
+            if (state == 1) {
+                return false;
+            }
+            step = "pause";
+
+            if (System.currentTimeMillis() > (startTime + 1000)) {
                 state = 1;
             }
 
@@ -332,6 +411,7 @@ public class Autonomous extends Hardware
             {
                 return false;
             }
+            step = "drive";
 
             if (have_drive_encoders_reached (encoderCount, encoderCount))
             {
@@ -376,6 +456,7 @@ public class Autonomous extends Hardware
             {
                 return false;
             }
+            step = "turn";
 
             state = 0;
 
@@ -391,7 +472,63 @@ public class Autonomous extends Hardware
     }
 
 
+    private class GyroTurn {
+        int state;
 
+        GyroTurn() {
+            state = -1;
+            run_using_encoders();
+        }
+
+        void reset() {
+            state = -1;
+            sensorGyro.resetZAxisIntegrator();
+        }
+
+        boolean action(float speed, int desiredHeading) {
+            if (state == -1){
+                //sets turning direction based on color
+                if (ftcConfig.param.colorIsRed){
+                    set_drive_power(speed, -speed);
+                    state = 0;
+                }
+                else{
+                    set_drive_power(-speed, speed);
+                    state = 0;
+                }
+
+                //if blue turn one way if red turn other
+
+            }
+
+            if (state == 1)
+            {
+                return false;
+            }
+
+            step = "gyroTurn";
+
+            xVal = sensorGyro.rawX();
+            yVal = sensorGyro.rawY();
+            zVal = sensorGyro.rawZ();
+
+            heading = sensorGyro.getHeading();
+
+            //turn until gyro reaches approximate correct place
+            //heading
+            if (Math.abs(heading - desiredHeading) < 2){
+                reset_drive_encoders ();
+                set_drive_power (0.0f, 0.0f);
+                state = 1;
+            }
+
+//abs of current - desired
+            //if ^ is less than a given approximate range 2
+            //then stop!
+
+        return true;
+        }
+    }
 
     void drive (float speed, int encoderCount)
     {
