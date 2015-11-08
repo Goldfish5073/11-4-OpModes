@@ -69,18 +69,21 @@ public class TeleOp extends Hardware {
 
         //WINCH
         float l_winch_power = scale_motor_power(0);
-        if (gamepad2.right_bumper)
+        if (gamepad1.a)
         {
             l_winch_power = scale_motor_power(1);
-        }else if (gamepad2.right_trigger > 0.0)
+        }else if (gamepad1.b)
         {
             l_winch_power = scale_motor_power(-1);
         }
         set_winch_power(l_winch_power);
 
         //HOOK
+        //TODO: make this less sensitive
         if (gamepad2.x){
             hook();
+        } else if (gamepad2.b){
+            hookBack();
         }
 
         // TAB SLAPPER

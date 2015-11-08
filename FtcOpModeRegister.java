@@ -73,6 +73,7 @@ public class FtcOpModeRegister implements OpModeRegister {
     manager.register("Autonomous", Autonomous.class);
     manager.register("TeleOp", TeleOp.class);
     manager.register("FtcConfig", FtcConfig.class);
+    manager.register("OpFtcConfig", OpFtcConfig.class);
 
     //manager.register("AdafruitRGBExample", AdafruitRGBExample.class);
     //manager.register("ColorSensorDriver", ColorSensorDriver.class);

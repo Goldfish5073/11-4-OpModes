@@ -183,7 +183,7 @@ public class Hardware extends OpMode {
         try
         {
             v_hook = hardwareMap.servo.get ("hook");
-            v_hook.setPosition(0.0D);
+            v_hook.setPosition(0.25D);
 
         }
         catch (Exception p_exception)
@@ -286,7 +286,9 @@ public class Hardware extends OpMode {
                                 + ", "
                                 + a_right_encoder_count ()
                 );
-        telemetry.addData ( "03", "Winch Drive: " + a_winch_power());
+        if(v_winch != null) {
+            telemetry.addData("03", "Winch Drive: " + a_winch_power());
+        }
     }
 
     public void set_first_message (String p_message)
@@ -1050,11 +1052,13 @@ public class Hardware extends OpMode {
     }
 
     void hook (){
-        if (v_hook.getPosition() < 1.0D){
-            v_hook.setPosition (1.0D);
+        if (v_hook.getPosition() < 0.9) {
+            v_hook.setPosition(v_hook.getPosition() + .05);
         }
-        else{
-            v_hook.setPosition (0.0D);
+    }
+    void hookBack (){
+        if (v_hook.getPosition() > 0.25) {
+            v_hook.setPosition (v_hook.getPosition() - .05);
         }
     }
 

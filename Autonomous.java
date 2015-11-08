@@ -48,7 +48,10 @@ public class Autonomous extends Hardware
     Delay delay1 = new Delay();
     Turn turn1 = new Turn();
     Drive drive1 = new Drive();
+    Drive drive2 = new Drive();
+    Drive drive3 = new Drive();
     GyroTurn gyroTurn1 = new GyroTurn();
+    GyroTurn gyroTurn2 = new GyroTurn();
     Pause pause1 = new Pause();
     Drive driveButton1 = new Drive();
 
@@ -60,31 +63,28 @@ public class Autonomous extends Hardware
         reset_drive_encoders();
         step = "start";
 
-        try
-        {
-            sensorRGB = hardwareMap.colorSensor.get ("mr");
-        }
-        catch (Exception p_exception)
-        {
-            m_warning_message ("color sensor");
-            DbgLog.msg (p_exception.getLocalizedMessage ());
+    try {
+        sensorRGB = hardwareMap.colorSensor.get("mr");
+    } catch (Exception p_exception) {
+        m_warning_message("color sensor");
+        DbgLog.msg(p_exception.getLocalizedMessage());
 
-            sensorRGB = null;
-        }
-        try
-        {
-            sensorGyro = hardwareMap.gyroSensor.get("gyro");
-        }
-        catch (Exception p_exception)
-        {
-            m_warning_message ("gyro sensor");
-            DbgLog.msg(p_exception.getLocalizedMessage());
+        sensorRGB = null;
+    }
 
-            sensorGyro = null;
-        }
+    try {
+        sensorGyro = hardwareMap.gyroSensor.get("gyro");
+    } catch (Exception p_exception) {
+        m_warning_message("gyro sensor");
+        DbgLog.msg(p_exception.getLocalizedMessage());
 
-        ftcConfig.init(hardwareMap.appContext, this);
-        // sensorRGB = hardwareMap.colorSensor.get("mr");
+        sensorGyro = null;
+    }
+
+
+    ftcConfig.init(hardwareMap.appContext, this);
+    // sensorRGB = hardwareMap.colorSensor.get("mr");
+        sensorGyro.calibrate();
 
 
         readBeacon1.reset();
@@ -93,7 +93,10 @@ public class Autonomous extends Hardware
         delay1.reset();
         turn1.reset();
         drive1.reset();
+        drive2.reset();
+        drive3.reset();
         gyroTurn1.reset();
+        gyroTurn2.reset();
         pause1.reset();
         driveButton1.reset();
     } // start
@@ -101,6 +104,7 @@ public class Autonomous extends Hardware
     @Override public void loop ()
 
     {
+
         telemetry.clearData();
         // can use configured variables here
         telemetry.addData("ColorIsRed", Boolean.toString(ftcConfig.param.colorIsRed));
@@ -120,92 +124,35 @@ public class Autonomous extends Hardware
         }*/
 
         if (delay1.action()) {
-        }else if (drive1.action(1.0f, 30)) {
-        }else if (pause1.action()){
-        }else if (gyroTurn1.action(1.0f, 60)){
+            step = "delay";
+        } else if (drive1.action(0.5f, 30)) {
+            step = "drive";
+        } else if (pause1.action()) {
+            step = "pause";
+        } else if (gyroTurn1.action(0.2f, 40)) {
+            step = "gyro turn";
             ///encoder in inches?
-        } else if (drive1.action(1.0f, 50)){
-        }
-
-
-        else if (readBeacon1.action()) {
+        } else if (drive2.action(0.5f, 37)) {
+            step = "drive 2";
+        } else if (gyroTurn2.action(0.2f, 45)){
+            step = "gyro turn2";
+        } else if (drive3.action(0.2f, 8)){
+            step = "drive 3";
+        } else if (readBeacon1.action()) {
+            step = "read beacon";
         } else if (moveArm1.action()) {
+            step = "move arm";
         } //else if (pressButton1.action()) {}
-        else if (driveButton1.action(0.5f, 2)){}
-
-
-        if(gamepad1.a) {
-            readBeacon1.reset();
-            moveArm1.reset();
-            pressButton1.reset();
+        else if (driveButton1.action(0.5f, 2)) {
+            step = "drive button";
         }
-        //----------------------------------------------------------------------
-        //
-        // State: Initialize (i.e. state_0).
-        //
-      /*  switch (v_state)
-        {
 
             //
-            // Drive forward until the encoders exceed the specified values.
+            // Send telemetry data to the driver station.
             //
-            case 1:
-                //
-                // Tell the system that motor encoders will be used.  This call MUST
-                // be in this state and NOT the previous or the encoders will not
-                // work.  It doesn't need to be in subsequent states.
-                //
-               // run_using_encoders ();
-                v_state++;
-                break;
-
-            //
-            // sense le color
-            //
-            case 2: //TODO - make variable isLeft and use to assign push_beacon
-                if (hsvValues[0] > 10)
-                {
-                    if(teamColorBlue)
-                    {
-                        push_beacon(true);
-                    }
-                    else
-                    {
-                        push_beacon(false);
-                    }
-                } else
-                {
-                    if(teamColorBlue)
-                    {
-                        push_beacon(false);
-                    }
-                    else
-                    {
-                        push_beacon(true);
-                    }
-                }
-                break;
-
-            //
-            // Perform no action - stay in this case until the OpMode is stopped.
-            // This method will still be called regardless of the state machine.
-            //
-            default:
-                //
-                // The autonomous actions have been accomplished (i.e. the state has
-                // transitioned into its final state.
-                //
-                break;
-        }
-*/
-        //
-        // Send telemetry data to the driver station.
-        //
-        color();
-        update_telemetry(); // Update common telemetry
-        telemetry.addData("18", "State: " + v_state);
-
-
+            color();
+            update_telemetry(); // Update common telemetry
+            telemetry.addData("18", "State: " + v_state);
     } // loop
 
 
@@ -263,7 +210,7 @@ public class Autonomous extends Hardware
             if (state == 1) {
                 return false;
             }
-            step = "readBeacon";
+
 
             color();
 
@@ -308,7 +255,7 @@ public class Autonomous extends Hardware
             if (state == 1) {
                 return false;
             }
-            step = "moveArm";
+
             push_beacon(isLeft);
 
             state = 1;
@@ -329,7 +276,6 @@ public class Autonomous extends Hardware
             if (state == 1){
                 return false;
             }
-            step = "pressButton";
 
             drive(1.0f, 2);
 
@@ -353,7 +299,7 @@ public class Autonomous extends Hardware
             if (state == 1) {
                 return false;
             }
-            step = "delay";
+
 
             if (System.currentTimeMillis() > (startTime + ftcConfig.param.delayInSec * 1000)) {
                 state = 1;
@@ -378,7 +324,7 @@ public class Autonomous extends Hardware
             if (state == 1) {
                 return false;
             }
-            step = "pause";
+
 
             if (System.currentTimeMillis() > (startTime + 1000)) {
                 state = 1;
@@ -411,13 +357,18 @@ public class Autonomous extends Hardware
             {
                 return false;
             }
-            step = "drive";
+
 
             if (have_drive_encoders_reached (encoderCount, encoderCount))
             {
                 reset_drive_encoders ();
                 set_drive_power (0.0f, 0.0f);
-                state = 1;
+                state = 2;
+            }
+
+            if (state == 2 && have_drive_encoders_reset ())
+            {
+               state = 1;
             }
             telemetry.addData("17", "State: " + state);
 
@@ -456,7 +407,6 @@ public class Autonomous extends Hardware
             {
                 return false;
             }
-            step = "turn";
 
             state = 0;
 
@@ -482,19 +432,24 @@ public class Autonomous extends Hardware
 
         void reset() {
             state = -1;
-            sensorGyro.resetZAxisIntegrator();
+            if(sensorGyro != null){
+                sensorGyro.resetZAxisIntegrator();
+            }
         }
 
         boolean action(float speed, int desiredHeading) {
             if (state == -1){
                 //sets turning direction based on color
+                sensorGyro.resetZAxisIntegrator();
                 if (ftcConfig.param.colorIsRed){
-                    set_drive_power(speed, -speed);
-                    state = 0;
-                }
-                else{
                     set_drive_power(-speed, speed);
                     state = 0;
+                    desiredHeading = 360 - desiredHeading;
+                }
+                else{
+                    set_drive_power(speed, -speed);
+                    state = 0;
+
                 }
 
                 //if blue turn one way if red turn other
@@ -506,7 +461,7 @@ public class Autonomous extends Hardware
                 return false;
             }
 
-            step = "gyroTurn";
+
 
             xVal = sensorGyro.rawX();
             yVal = sensorGyro.rawY();
@@ -516,7 +471,7 @@ public class Autonomous extends Hardware
 
             //turn until gyro reaches approximate correct place
             //heading
-            if (Math.abs(heading - desiredHeading) < 2){
+            if (Math.abs(heading - desiredHeading) < 5){
                 reset_drive_encoders ();
                 set_drive_power (0.0f, 0.0f);
                 state = 1;
