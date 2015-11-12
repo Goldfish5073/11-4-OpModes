@@ -196,7 +196,7 @@ public class Hardware extends OpMode {
         try
         {
             v_tab_slapper = hardwareMap.servo.get ("tab_slapper");
-            v_tab_slapper.setPosition(0.0D);
+            v_tab_slapper.setPosition(0.7D);
 
         }
         catch (Exception p_exception)
@@ -288,6 +288,10 @@ public class Hardware extends OpMode {
                 );
         if(v_winch != null) {
             telemetry.addData("03", "Winch Drive: " + a_winch_power());
+        }
+        if(v_tab_slapper != null) {
+            telemetry.addData("04", "Tab Slapper: " + v_tab_slapper.getPosition());
+
         }
     }
 
@@ -382,9 +386,27 @@ public class Hardware extends OpMode {
     //
     /**
      * Scale the joystick input using a nonlinear algorithm.
+     *
      */
+    float choose_motor_power (float p_power, int scaleIndex)
+    {
+        if (Range.clip (p_power, -1, 1) > 0) {
+        float[] speeds = {0.00f, 0.6f, 0.8f, 1.0f};
+        } else {
+            float[] speeds = {0.00f, -0.6f, -0.8f, -1.0f};
+        }
+
+        return speeds[scaleIndex];
+    }
+
     float scale_motor_power (float p_power)
     {
+        float speed = 0.00f;
+        if (Range.clip (p_power, -1, 1) > 0) {
+            float[] speeds = {0.00f, 0.6f, 0.8f, 1.0f};
+        } else if (Range.clip (p_power, -1, 1) < 0) {
+            float[] speeds = {0.00f, -0.6f, -0.8f, -1.0f};
+        }
         //
         // Assume no scaling.
         //
@@ -1063,11 +1085,13 @@ public class Hardware extends OpMode {
     }
 
     void tab_slapper (){
-        if (v_tab_slapper.getPosition() < 1.0D){
-            v_tab_slapper.setPosition (1.0D);
+        if (v_tab_slapper.getPosition() > 0.2D) {
+            v_tab_slapper.setPosition(v_hook.getPosition() - .01D);
         }
-        else{
-            v_tab_slapper.setPosition (0.0D);
+    }
+    void tab_slapper_back(){
+        if (v_tab_slapper.getPosition() < 0.7D) {
+            v_tab_slapper.setPosition (v_hook.getPosition() + .01D);
         }
     }
 

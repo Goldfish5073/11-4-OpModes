@@ -25,7 +25,7 @@ public class Autonomous extends Hardware
 
     private int v_state = 1;
 
-    private boolean isLeft;
+    private String beaconPosition;
 
     private ColorSensor sensorRGB;
     private GyroSensor sensorGyro;
@@ -53,6 +53,7 @@ public class Autonomous extends Hardware
     GyroTurn gyroTurn1 = new GyroTurn();
     GyroTurn gyroTurn2 = new GyroTurn();
     Pause pause1 = new Pause();
+    Pause pause2 = new Pause();
     Drive driveButton1 = new Drive();
 
     @Override public void start ()
@@ -98,6 +99,7 @@ public class Autonomous extends Hardware
         gyroTurn1.reset();
         gyroTurn2.reset();
         pause1.reset();
+        pause2.reset();
         driveButton1.reset();
     } // start
 
@@ -127,7 +129,7 @@ public class Autonomous extends Hardware
             step = "delay";
         } else if (drive1.action(0.5f, 30)) {
             step = "drive";
-        } else if (pause1.action()) {
+        } else if (pause1.action(1)) {
             step = "pause";
         } else if (gyroTurn1.action(0.2f, 40)) {
             step = "gyro turn";
@@ -138,7 +140,10 @@ public class Autonomous extends Hardware
             step = "gyro turn2";
         } else if (drive3.action(0.2f, 8)){
             step = "drive 3";
-        } else if (readBeacon1.action()) {
+        } else if (pause2.action(5)){
+            step = "pause 2";
+        }
+        else if (readBeacon1.action()) {
             step = "read beacon";
         } else if (moveArm1.action()) {
             step = "move arm";
@@ -188,52 +193,53 @@ public class Autonomous extends Hardware
 
     private class ReadBeacon
     {
+        String color;
+        //0 = unknown
+        //1 = blue
+        //-1 = red
         int state;
-
-        // -1 = has not been run
-        // 0 = is running
-        // 1 = is done
         ReadBeacon()
         {
             state = -1;
-
+            color = "unknown";
         }
 
         void reset()
         {
             state = -1;
+            color = "unknown";
         }
 
         boolean action()
         {
-
             if (state == 1) {
                 return false;
             }
-
 
             color();
 
             if (hsvValues[0] > 10)
             {
-                if(ftcConfig.param.colorIsRed)
-                {
-                    isLeft = true;
-                }
-                else
-                {
-                    isLeft = false;
-                }
+                color = "blue";
+            } else if (false) //determines if is blue
+            {
+                color = "red";
+            }
+
+            if (ftcConfig.param.colorIsRed && color.equals("red")) {
+                beaconPosition = "left";
+            } else if (ftcConfig.param.colorIsRed && color.equals("blue"))
+            {
+                beaconPosition = "right";
+            } else if (!ftcConfig.param.colorIsRed && color.equals("blue"))
+            {
+                beaconPosition = "left";
+            } else if (!ftcConfig.param.colorIsRed && color.equals("red"))
+            {
+                beaconPosition = "right";
             } else
             {
-                if(ftcConfig.param.colorIsRed)
-                {
-                    isLeft = false;
-                }
-                else
-                {
-                    isLeft = true;
-                }
+                beaconPosition = "unknown";
             }
 
             state = 1;
@@ -255,8 +261,9 @@ public class Autonomous extends Hardware
             if (state == 1) {
                 return false;
             }
-
-            push_beacon(isLeft);
+            if(!beaconPosition.equals("unknown")){
+                push_beacon(beaconPosition.equals("left"));
+            }
 
             state = 1;
 
@@ -316,7 +323,7 @@ public class Autonomous extends Hardware
             state = -1;
         }
         void reset() { state = -1; }
-        boolean action() {
+        boolean action(int seconds) {
             if (state == -1){
                 startTime = System.currentTimeMillis();
                 state = 0;
@@ -326,7 +333,7 @@ public class Autonomous extends Hardware
             }
 
 
-            if (System.currentTimeMillis() > (startTime + 1000)) {
+            if (System.currentTimeMillis() > (startTime + seconds * 1000)) {
                 state = 1;
             }
 
@@ -443,17 +450,11 @@ public class Autonomous extends Hardware
                 sensorGyro.resetZAxisIntegrator();
                 if (ftcConfig.param.colorIsRed){
                     set_drive_power(-speed, speed);
-                    state = 0;
-                    desiredHeading = 360 - desiredHeading;
                 }
-                else{
+                else {
                     set_drive_power(speed, -speed);
-                    state = 0;
-
                 }
-
-                //if blue turn one way if red turn other
-
+                state = 0;
             }
 
             if (state == 1)
@@ -461,7 +462,10 @@ public class Autonomous extends Hardware
                 return false;
             }
 
-
+            if (ftcConfig.param.colorIsRed)
+            {
+                desiredHeading = 360 - desiredHeading;
+            }
 
             xVal = sensorGyro.rawX();
             yVal = sensorGyro.rawY();
@@ -476,6 +480,8 @@ public class Autonomous extends Hardware
                 set_drive_power (0.0f, 0.0f);
                 state = 1;
             }
+            telemetry.addData("Desired Heading", desiredHeading);
+            telemetry.addData("Color", ftcConfig.param.colorIsRed);
 
 //abs of current - desired
             //if ^ is less than a given approximate range 2

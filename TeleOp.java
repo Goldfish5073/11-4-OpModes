@@ -5,6 +5,9 @@ package com.qualcomm.ftcrobotcontroller.opmodes;
  */
 public class TeleOp extends Hardware {
 
+    int driveScale = 1;
+
+
     public TeleOp()
     {
     }
@@ -30,6 +33,16 @@ public class TeleOp extends Hardware {
         // class, but the power levels aren't applied until this method ends.
         //
 
+        //DRIVE SCALE
+
+        if (gamepad1.right_trigger > 0.1)
+        {
+            driveScale++;
+        } else if (gamepad1.right_bumper)
+        {
+            driveScale--;
+        }
+
         //DRIVE
         float l_gp1_left_stick_y = -gamepad1.left_stick_y;
         float l_left_drive_power
@@ -45,11 +58,11 @@ public class TeleOp extends Hardware {
         //ARM
         float l_gp2_left_stick_y = gamepad2.left_stick_y;
         float l_first_arm_power
-                = scale_motor_power (l_gp2_left_stick_y);
+                = scale_motor_power (l_gp2_left_stick_y / 2);
 
         float l_gp2_right_stick_y = -gamepad2.right_stick_y;
         float l_second_arm_power
-                = scale_motor_power (l_gp2_right_stick_y);
+                = scale_motor_power (l_gp2_right_stick_y * 2 / 3);
 
         set_arm_power (l_first_arm_power, l_second_arm_power);
 
@@ -79,16 +92,18 @@ public class TeleOp extends Hardware {
         set_winch_power(l_winch_power);
 
         //HOOK
-        //TODO: make this less sensitive
-        if (gamepad2.x){
+        //TODO: make this less sensitive? use a current and a past state, have equal
+        if (gamepad2.right_bumper){
             hook();
-        } else if (gamepad2.b){
+        } else if (gamepad2.right_trigger > 0.1){
             hookBack();
         }
 
         // TAB SLAPPER
-        if (gamepad2.y){
+        if (gamepad2.x){
             tab_slapper();
+        }else if (gamepad2.y){
+            tab_slapper_back();
         }
 
         //push_beacon(gamepad1.a);
