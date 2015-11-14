@@ -46,14 +46,19 @@ public class Autonomous extends Hardware
     MoveArm moveArm1 = new MoveArm();
     PressButton pressButton1 = new PressButton();
     Delay delay1 = new Delay();
+    Delay delayM = new Delay();
     Turn turn1 = new Turn();
     Drive drive1 = new Drive();
     Drive drive2 = new Drive();
     Drive drive3 = new Drive();
+    Drive driveM = new Drive();
+    Drive driveM2 = new Drive();
     GyroTurn gyroTurn1 = new GyroTurn();
     GyroTurn gyroTurn2 = new GyroTurn();
+    GyroTurn gyroTurnM = new GyroTurn();
     Pause pause1 = new Pause();
     Pause pause2 = new Pause();
+    Pause pauseM = new Pause();
     Drive driveButton1 = new Drive();
 
     @Override public void start ()
@@ -64,43 +69,57 @@ public class Autonomous extends Hardware
         reset_drive_encoders();
         step = "start";
 
-    try {
-        sensorRGB = hardwareMap.colorSensor.get("mr");
-    } catch (Exception p_exception) {
-        m_warning_message("color sensor");
-        DbgLog.msg(p_exception.getLocalizedMessage());
 
-        sensorRGB = null;
-    }
 
-    try {
-        sensorGyro = hardwareMap.gyroSensor.get("gyro");
-    } catch (Exception p_exception) {
-        m_warning_message("gyro sensor");
-        DbgLog.msg(p_exception.getLocalizedMessage());
+        try {
+            sensorRGB = hardwareMap.colorSensor.get("mr");
+        } catch (Exception p_exception) {
+            m_warning_message("color sensor");
+            DbgLog.msg(p_exception.getLocalizedMessage());
+            sensorRGB = null;
+        }
 
-        sensorGyro = null;
-    }
+
+        try {
+            sensorGyro = hardwareMap.gyroSensor.get("gyro");
+        } catch (Exception p_exception) {
+            m_warning_message("gyro sensor");
+            DbgLog.msg(p_exception.getLocalizedMessage());
+            sensorGyro = null;
+        }
 
 
     ftcConfig.init(hardwareMap.appContext, this);
+
     // sensorRGB = hardwareMap.colorSensor.get("mr");
         sensorGyro.calibrate();
 
 
         readBeacon1.reset();
+
         moveArm1.reset();
         pressButton1.reset();
         delay1.reset();
+
+        delayM.reset();
         turn1.reset();
         drive1.reset();
         drive2.reset();
         drive3.reset();
+
+        driveM.reset();
+        driveM2.reset();
         gyroTurn1.reset();
         gyroTurn2.reset();
+        gyroTurnM.reset();
         pause1.reset();
         pause2.reset();
+        pauseM.reset();
         driveButton1.reset();
+
+
+
+
     } // start
 
     @Override public void loop ()
@@ -123,33 +142,49 @@ public class Autonomous extends Hardware
         } else if (readBeacon1.action()) {
         } else if (moveArm1.action()) {
         } else if (pressButton1.action()) {
-        }*/
+        }/*/
+        if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_BEACON){
 
-        if (delay1.action()) {
-            step = "delay";
-        } else if (drive1.action(0.5f, 30)) {
-            step = "drive";
-        } else if (pause1.action(1)) {
-            step = "pause";
-        } else if (gyroTurn1.action(0.2f, 40)) {
-            step = "gyro turn";
-            ///encoder in inches?
-        } else if (drive2.action(0.5f, 37)) {
-            step = "drive 2";
-        } else if (gyroTurn2.action(0.2f, 45)){
-            step = "gyro turn2";
-        } else if (drive3.action(0.2f, 8)){
-            step = "drive 3";
-        } else if (pause2.action(5)){
-            step = "pause 2";
+            if (delay1.action()) {
+                step = "delay";
+            } else if (drive1.action(0.5f, 30)) {
+                step = "drive";
+            } else if (pause1.action(1)) {
+                step = "pause";
+            } else if (gyroTurn1.action(0.2f, 40)) {
+                step = "gyro turn";
+                ///encoder in inches?
+            } else if (drive2.action(0.5f, 37)) {
+                step = "drive 2";
+            } else if (gyroTurn2.action(0.2f, 45)){
+                step = "gyro turn2";
+            } else if (drive3.action(0.2f, 8)){
+                step = "drive 3";
+            } else if (pause2.action(5)){
+                step = "pause 2";
+            }
+            else if (readBeacon1.action()) {
+                step = "read beacon";
+            } else if (moveArm1.action()) {
+                step = "move arm";
+            } //else if (pressButton1.action()) {}
+            else if (driveButton1.action(0.5f, 2)) {
+                step = "drive button";
+            }
         }
-        else if (readBeacon1.action()) {
-            step = "read beacon";
-        } else if (moveArm1.action()) {
-            step = "move arm";
-        } //else if (pressButton1.action()) {}
-        else if (driveButton1.action(0.5f, 2)) {
-            step = "drive button";
+        else if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_MOUNTAIN) {
+            if (delayM.action()) {
+                step = "delayM";
+            } else if (driveM.action(0.5f, 20)) {
+                step = "driveM";
+            } else if (pauseM.action(1)) {
+                step = "pauseM";
+            } else if (gyroTurnM.action(0.2f, 40)) {
+                step = "gyro turnM";
+                ///encoder in inches?
+            } else if (driveM2.action(0.5f, 32)) {
+                step = "drive M2";
+            }
         }
 
             //
@@ -158,6 +193,7 @@ public class Autonomous extends Hardware
             color();
             update_telemetry(); // Update common telemetry
             telemetry.addData("18", "State: " + v_state);
+
     } // loop
 
 
@@ -218,12 +254,15 @@ public class Autonomous extends Hardware
 
             color();
 
-            if (hsvValues[0] > 10)
+            if (hsvValues[0] > 50)
             {
                 color = "blue";
-            } else if (false) //determines if is blue
+            } else if (sensorRGB.red() > 0)
             {
                 color = "red";
+            } else
+            {
+                color = "unknown";
             }
 
             if (ftcConfig.param.colorIsRed && color.equals("red")) {
