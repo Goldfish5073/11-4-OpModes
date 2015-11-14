@@ -183,7 +183,7 @@ public class Hardware extends OpMode {
         try
         {
             v_hook = hardwareMap.servo.get ("hook");
-            v_hook.setPosition(0.25D);
+            v_hook.setPosition(0.20D);
 
         }
         catch (Exception p_exception)
@@ -205,6 +205,19 @@ public class Hardware extends OpMode {
             DbgLog.msg (p_exception.getLocalizedMessage ());
 
             v_tab_slapper = null;
+        }
+        try
+        {
+            v_climber_dropper = hardwareMap.servo.get ("climber_dropper");
+            v_climber_dropper.setPosition(0.1D);
+
+        }
+        catch (Exception p_exception)
+        {
+            m_warning_message ("climber_dropper");
+            DbgLog.msg (p_exception.getLocalizedMessage ());
+
+            v_climber_dropper = null;
         }
 
 
@@ -267,31 +280,30 @@ public class Hardware extends OpMode {
         {
             set_first_message (a_warning_message ());
         }
-        //
-        // Send telemetry data to the driver station.
-        //
-        telemetry.addData
-                ( "01"
-                        , "Left Drive: "
-                                + a_left_drive_power ()
-                                + ", "
-                                + a_left_encoder_count()
-                                + ", "
-                                + v_motor_left_drive.getChannelMode()
-                );
-        telemetry.addData
-                ( "02"
-                        , "Right Drive: "
-                                + a_right_drive_power ()
-                                + ", "
-                                + a_right_encoder_count ()
-                );
+
+        if(v_motor_left_drive != null) {
+            telemetry.addData("01", "Left Drive: " + a_left_drive_power() + ", " + a_left_encoder_count());
+        }
+        if(v_motor_right_drive != null) {
+            telemetry.addData("02", "Right Drive: " + a_right_drive_power() + ", " + a_right_encoder_count());
+        }
+        if(v_first_arm != null){
+            telemetry.addData("03", "First Arm: " + v_first_arm.getPower());
+        }
+        if(v_second_arm != null) {
+            telemetry.addData("04", "Second Arm: " + v_second_arm.getPower());
+        }
         if(v_winch != null) {
-            telemetry.addData("03", "Winch Drive: " + a_winch_power());
+            telemetry.addData("05", "Winch Drive: " + a_winch_power());
+        }
+        if(v_claw != null){
+            telemetry.addData("06", "Claw: " + v_claw.getPower());
         }
         if(v_tab_slapper != null) {
-            telemetry.addData("04", "Tab Slapper: " + v_tab_slapper.getPosition());
-
+            telemetry.addData("07", "Tab Slapper: " + v_tab_slapper.getPosition());
+        }
+        if(v_climber_dropper != null) {
+            telemetry.addData("08", "Climber Dropper: " + v_climber_dropper.getPosition());
         }
     }
 
@@ -310,14 +322,12 @@ public class Hardware extends OpMode {
     public void update_gamepad_telemetry ()
 
     {
-        //
-        // Send telemetry data concerning gamepads to the driver station.
-        //
         telemetry.addData ("05", "GP1 Left: " + -gamepad1.left_stick_y);
         telemetry.addData ("06", "GP1 Right: " + -gamepad1.right_stick_y);
         telemetry.addData ("07", "GP2 Left: " + -gamepad2.left_stick_y);
-        telemetry.addData ("08", "GP2 X: " + gamepad2.x);
-        telemetry.addData ("09", "GP2 Y: " + gamepad2.y);
+        telemetry.addData ("08", "GP2 Right: " + -gamepad2.right_stick_y);
+        telemetry.addData ("09", "GP2 X: " + gamepad2.x);
+        telemetry.addData ("09.1", "GP2 Y: " + gamepad2.y);
         telemetry.addData ("10", "GP1 LT: " + gamepad1.left_trigger);
         telemetry.addData ("11", "GP1 RT: " + gamepad1.right_trigger);
         telemetry.addData ("12", "GP1 LB: " + gamepad1.left_bumper);
@@ -390,13 +400,15 @@ public class Hardware extends OpMode {
      */
     float choose_motor_power (float p_power, int scaleIndex)
     {
-        if (Range.clip (p_power, -1, 1) > 0) {
         float[] speeds = {0.00f, 0.6f, 0.8f, 1.0f};
+        float selectedSpeed;
+        if (Range.clip (p_power, -1, 1) > 0) {
+            selectedSpeed = speeds[scaleIndex];
         } else {
-            float[] speeds = {0.00f, -0.6f, -0.8f, -1.0f};
+            selectedSpeed = -speeds[scaleIndex];
         }
 
-        return speeds[scaleIndex];
+        return selectedSpeed;
     }
 
     float scale_motor_power (float p_power)
@@ -519,14 +531,13 @@ public class Hardware extends OpMode {
     void set_drive_power (double p_left_power, double p_right_power)
 
     {
-        if (v_motor_left_drive != null)
-        {
-            v_motor_left_drive.setPower (p_left_power);
-        }
-        if (v_motor_left_drive_back != null)
-        {
-            v_motor_left_drive_back.setPower (-p_left_power);
-        }
+
+
+
+
+    } // set_drive_power
+    void set_right_power (double p_right_power)
+    {
         if (v_motor_right_drive != null)
         {
             v_motor_right_drive.setPower (p_right_power);
@@ -535,10 +546,19 @@ public class Hardware extends OpMode {
         {
             v_motor_right_drive_back.setPower (p_right_power);
         }
+    }
 
-
-    } // set_drive_power
-
+    void set_left_power (double p_left_power)
+    {
+        if (v_motor_left_drive != null)
+        {
+            v_motor_left_drive.setPower (p_left_power);
+        }
+        if (v_motor_left_drive_back != null)
+        {
+            v_motor_left_drive_back.setPower (-p_left_power);
+        }
+    }
 
 
     //set_arm_power
@@ -554,6 +574,20 @@ public class Hardware extends OpMode {
             v_second_arm.setPower (p_second_power);
         }
     }
+    void set_first_arm_power (double p_first_power)
+    {
+        if (v_first_arm != null)
+        {
+            v_first_arm.setPower(p_first_power);
+        }
+    }
+    void set_second_arm_power (double p_second_power)
+    {
+        if (v_second_arm != null)
+        {
+            v_second_arm.setPower (p_second_power);
+        }
+    }
 
     void set_winch_power(double p_power)
     {
@@ -563,8 +597,7 @@ public class Hardware extends OpMode {
         }
     }
 
-    void set_claw_power(double p_power)
-    {
+    void set_claw_power(double p_power) {
         if(v_claw != null)
         {
             v_claw.setPower(p_power);
@@ -807,7 +840,7 @@ public class Hardware extends OpMode {
             //
             // Has the encoder reached the specified values?
             //
-            // TODO Implement stall code using these variables.
+            // Implement stall code using these variables.
             //
             if (Math.abs (v_motor_left_drive.getCurrentPosition () * (diameter * Math.PI) / 1120) > p_count)
             {
@@ -845,7 +878,7 @@ public class Hardware extends OpMode {
             //
             // Have the encoders reached the specified values?
             //
-            // TODO Implement stall code using these variables.
+            // Implement stall code using these variables.
             //
             if (Math.abs (v_motor_right_drive.getCurrentPosition () * (diameter * Math.PI) / 1120) > p_count)
             {
@@ -957,74 +990,32 @@ public class Hardware extends OpMode {
             //
             l_return = true;
         }
-
-        //
-        // Return the status.
-        //
         return l_return;
 
     } // drive_using_encoders
 
     //--------------------------------------------------------------------------
-    //
     // has_left_drive_encoder_reset
-    //
-    /**
-     * Indicate whether the left drive encoder has been completely reset.
-     */
     boolean has_left_drive_encoder_reset ()
     {
-        //
-        // Assume failure.
-        //
         boolean l_return = false;
-
-        //
-        // Has the left encoder reached zero?
-        //
         if (a_left_encoder_count () == 0)
         {
-            //
-            // Set the status to a positive indication.
-            //
             l_return = true;
         }
-
-        //
-        // Return the status.
-        //
         return l_return;
 
     } // has_left_drive_encoder_reset
 
-    //--------------------------------------------------------------------------
-    //
+    //-------------------------------------------------------------------------
     // has_right_drive_encoder_reset
-    //
-    /**
-     * Indicate whether the left drive encoder has been completely reset.
-     */
     boolean has_right_drive_encoder_reset ()
     {
-        //
-        // Assume failure.
-        //
         boolean l_return = false;
-
-        //
-        // Has the right encoder reached zero?
-        //
         if (a_right_encoder_count () == 0)
         {
-            //
-            // Set the status to a positive indication.
-            //
             l_return = true;
         }
-
-        //
-        // Return the status.
-        //
         return l_return;
 
     } // has_right_drive_encoder_reset
@@ -1032,31 +1023,13 @@ public class Hardware extends OpMode {
     //--------------------------------------------------------------------------
     //
     // have_drive_encoders_reset
-    //
-    /**
-     * Indicate whether the encoders have been completely reset.
-     */
     boolean have_drive_encoders_reset ()
     {
-        //
-        // Assume failure.
-        //
         boolean l_return = false;
-
-        //
-        // Have the encoders reached zero?
-        //
         if (has_left_drive_encoder_reset () && has_right_drive_encoder_reset ())
         {
-            //
-            // Set the status to a positive indication.
-            //
             l_return = true;
         }
-
-        //
-        // Return the status.
-        //
         return l_return;
 
     } // have_drive_encoders_reset
@@ -1065,14 +1038,19 @@ public class Hardware extends OpMode {
     {
         if (isLeft)
         {
-            v_servo_push_beacon.setPosition (0.0D);
+            v_servo_push_beacon.setPosition (0.1D);
         }
         else
         {
-            v_servo_push_beacon.setPosition (1.0D);
+            v_servo_push_beacon.setPosition (0.9D);
         }
     }
 
+
+    //TODO Our code!
+
+    //////////////////////////////////////////////////////////////////////////////
+    //HOOK
     void hook (){
         if (v_hook.getPosition() < 0.9) {
             v_hook.setPosition(v_hook.getPosition() + .05);
@@ -1084,16 +1062,38 @@ public class Hardware extends OpMode {
         }
     }
 
+
+    //////////////////////////////////////////////////////////////////////////////
+    // TAB SLAPPER
     void tab_slapper (){
         if (v_tab_slapper.getPosition() > 0.2D) {
-            v_tab_slapper.setPosition(v_hook.getPosition() - .01D);
+            v_tab_slapper.setPosition(0.2D);
         }
     }
     void tab_slapper_back(){
         if (v_tab_slapper.getPosition() < 0.7D) {
-            v_tab_slapper.setPosition (v_hook.getPosition() + .01D);
+            v_tab_slapper.setPosition(0.7D);
         }
     }
+
+
+    /////////////////////////////////////////////////////////////////////////////
+    //CLIMBER DROPPER
+    void climber_dropper() {
+        if(v_climber_dropper.getPosition() > 0.1D){
+            v_climber_dropper.setPosition(0.1D);
+        }
+    }
+    void climber_dropper_back(){
+        if(v_climber_dropper.getPosition() < 0.7D){
+            v_climber_dropper.setPosition(0.7D);
+        }
+    }
+
+
+
+
+
 
     private DcMotor v_motor_left_drive;
 
@@ -1122,6 +1122,8 @@ public class Hardware extends OpMode {
     public Servo v_hook;
 
     public Servo v_tab_slapper;
+
+    public Servo v_climber_dropper;
 }
 
 
