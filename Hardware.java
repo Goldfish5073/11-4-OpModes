@@ -15,10 +15,16 @@ import com.qualcomm.robotcore.util.Range;
 
 public class Hardware extends OpMode {
 
+    //VARIABLES
     final double diameter = 4;
 
-    public Hardware() {
+    double tab_slapper_in = 0.9D;
+    double tab_slapper_out = 0.3D;
 
+    double climber_dropper_in = 0.1D;
+    double climber_dropper_out = 0.9D;
+
+    public Hardware() {
     }
 
 
@@ -26,197 +32,131 @@ public class Hardware extends OpMode {
     public void init()
 
     {
-        //
-        // Use the hardwareMap to associate class members to hardware ports.
-        //
-        // Note that the names of the devices (i.e. arguments to the get method)
-        // must match the names specified in the configuration file created by
-        // the FTC Robot Controller (Settings-->Configure Robot).
-        //
-        // The variable below is used to provide telemetry data to a class user.
-        //
+        //WARNING MESSAGE INTIALIZATION
         v_warning_generated = false;
         v_warning_message = "Can't map; ";
 
-        //
-        // Connect the drive wheel motors.
-        //
-        // The direction of the right motor is reversed, so joystick inputs can
-        // be more generically applied.
 
 
+        //MOTOR CONTROLLERS
         try {
             v_drive_controller = hardwareMap.dcMotorController.get ("drive_controller");
-        }
-        catch (Exception p_exception)
-        {
+        } catch (Exception p_exception) {
             m_warning_message ("drive_controller");
             DbgLog.msg (p_exception.getLocalizedMessage ());
-
             v_drive_controller = null;
         }
         try {
             v_drive_controller_back = hardwareMap.dcMotorController.get ("drive_controller_back");
-        }
-        catch (Exception p_exception)
-        {
+        } catch (Exception p_exception) {
             m_warning_message ("drive_controller_back");
             DbgLog.msg(p_exception.getLocalizedMessage());
-
             v_drive_controller_back = null;
         }
 
 
-        try
-        {
-            v_motor_left_drive = hardwareMap.dcMotor.get ("left_drive");
 
-        }
-        catch (Exception p_exception)
-        {
+        //DRIVE MOTORS
+        try {
+            v_motor_left_drive = hardwareMap.dcMotor.get ("left_drive");
+        } catch (Exception p_exception) {
             m_warning_message ("left_drive");
             DbgLog.msg (p_exception.getLocalizedMessage ());
-
             v_motor_left_drive = null;
         }
-
-        try
-        {
+        try {
             v_motor_left_drive_back = hardwareMap.dcMotor.get ("left_drive_back");
-
-        }
-        catch (Exception p_exception)
-        {
+        } catch (Exception p_exception) {
             m_warning_message("left_drive_back");
             DbgLog.msg (p_exception.getLocalizedMessage ());
-
             v_motor_left_drive_back = null;
-            //  v_motor_left_drive_back.setDirection (DcMotor.Direction.REVERSE);
-        }
-
-        try
-        {
+        }try {
             v_motor_right_drive = hardwareMap.dcMotor.get ("right_drive");
             v_motor_right_drive.setDirection (DcMotor.Direction.REVERSE);
-        }
-        catch (Exception p_exception)
-        {
+        } catch (Exception p_exception) {
             m_warning_message ("right_drive");
             DbgLog.msg (p_exception.getLocalizedMessage ());
-
             v_motor_right_drive = null;
         }
-
-        try
-        {
+        try {
             v_motor_right_drive_back = hardwareMap.dcMotor.get ("right_drive_back");
-            //v_motor_right_drive_back.setDirection (DcMotor.Direction.REVERSE);
-        }
-        catch (Exception p_exception)
-        {
+        } catch (Exception p_exception) {
             m_warning_message ("right_drive_back");
             DbgLog.msg (p_exception.getLocalizedMessage ());
-
             v_motor_right_drive_back = null;
         }
-        try
-        {
-            v_servo_push_beacon = hardwareMap.servo.get ("push_beacon");
-            v_servo_push_beacon.setPosition (0.0D);
-        }
-        catch (Exception p_exception)
-        {
-            m_warning_message ("push_beacon");
-            DbgLog.msg (p_exception.getLocalizedMessage ());
 
-            v_servo_push_beacon = null;
-        }
 
-        try
-        {
+        //ARM MOTORS
+        try {
             v_first_arm = hardwareMap.dcMotor.get ("first_arm");
-            //v_first_arm.setDirection (DcMotor.Direction.REVERSE);
-        }
-        catch (Exception p_exception)
-        {
+        } catch (Exception p_exception) {
             m_warning_message ("first_arm");
             DbgLog.msg (p_exception.getLocalizedMessage ());
-
             v_first_arm = null;
         }
-
-        try
-        {
+        try {
             v_second_arm = hardwareMap.dcMotor.get ("second_arm");
-            //v_first_arm.setDirection (DcMotor.Direction.REVERSE);
-        }
-        catch (Exception p_exception)
-        {
+        } catch (Exception p_exception) {
             m_warning_message ("second_arm");
             DbgLog.msg (p_exception.getLocalizedMessage ());
-
             v_second_arm = null;
         }
-        try
-        {
+
+
+
+        //CLIMBING MOTORS
+        try {
             v_claw = hardwareMap.dcMotor.get("claw");
-        }
-        catch (Exception p_exception)
-        {
+        } catch (Exception p_exception) {
             m_warning_message ("claw");
             DbgLog.msg (p_exception.getLocalizedMessage ());
-
             v_claw = null;
         }
-        try
-        {
+        try {
             v_winch = hardwareMap.dcMotor.get ("winch");
-
-        }
-        catch (Exception p_exception)
-        {
+        } catch (Exception p_exception) {
             m_warning_message ("winch");
             DbgLog.msg (p_exception.getLocalizedMessage ());
-
             v_winch = null;
         }
-        try
-        {
-            v_hook = hardwareMap.servo.get ("hook");
-            v_hook.setPosition(0.20D);
 
-        }
-        catch (Exception p_exception)
-        {
+
+
+
+        //SERVOS
+        try {
+            v_hook = hardwareMap.servo.get ("hook");
+            v_hook.setPosition(0.1D);
+        } catch (Exception p_exception) {
             m_warning_message ("hook");
             DbgLog.msg (p_exception.getLocalizedMessage ());
-
             v_hook = null;
         }
         try
         {
             v_tab_slapper = hardwareMap.servo.get ("tab_slapper");
-            v_tab_slapper.setPosition(0.7D);
-
-        }
-        catch (Exception p_exception)
-        {
+            v_tab_slapper.setPosition(tab_slapper_in);
+        } catch (Exception p_exception) {
             m_warning_message ("tab_slapper");
             DbgLog.msg (p_exception.getLocalizedMessage ());
-
             v_tab_slapper = null;
+        }
+        try {
+            v_servo_push_beacon = hardwareMap.servo.get ("push_beacon");
+            v_servo_push_beacon.setPosition (0.0D);
+        } catch (Exception p_exception) {
+            m_warning_message ("push_beacon");
+            DbgLog.msg (p_exception.getLocalizedMessage ());
+            v_servo_push_beacon = null;
         }
         try
         {
             v_climber_dropper = hardwareMap.servo.get ("climber_dropper");
-            v_climber_dropper.setPosition(0.1D);
-
-        }
-        catch (Exception p_exception)
-        {
+            v_climber_dropper.setPosition(climber_dropper_in);
+        } catch (Exception p_exception) {
             m_warning_message ("climber_dropper");
             DbgLog.msg (p_exception.getLocalizedMessage ());
-
             v_climber_dropper = null;
         }
 
@@ -244,98 +184,90 @@ public class Hardware extends OpMode {
         run_using_encoders ();
     } // init
 
-    //WARNING MESSAGES - PREVENT CRASH - TAKE OUT LATER IF POSSIBLE
-    void m_warning_message (String p_exception_message)
 
-    {
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //WARNING MESSAGES - PREVENT CRASH - TAKE OUT LATER IF POSSIBLE
+    void m_warning_message (String p_exception_message) {
         if (v_warning_generated)
         {
             v_warning_message += ", ";
         }
         v_warning_generated = true;
         v_warning_message += p_exception_message;
-
     }
     private boolean v_warning_generated = false;
     private String v_warning_message;
-
-    String a_warning_message () //goes into telemetry to report
-
-    {
+    String a_warning_message () { //goes into telemetry to report
         return v_warning_message;
-
     }
-    boolean a_warning_generated ()
-
-    {
+    boolean a_warning_generated () {
         return v_warning_generated;
-
     }
 
-    //TELEMETRY
-    public void update_telemetry ()
 
-    {
-        if (a_warning_generated ())
-        {
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //TELEMETRY
+    public void update_telemetry () {
+        if (a_warning_generated ()) {
             set_first_message (a_warning_message ());
         }
-
+        telemetry.addData("0001", "HARDWARE----------------------");
         if(v_motor_left_drive != null) {
-            telemetry.addData("01", "Left Drive: " + a_left_drive_power() + ", " + a_left_encoder_count());
+            telemetry.addData("001", "Left Drive: " + a_left_drive_power() + ", " + a_left_encoder_count());
         }
         if(v_motor_right_drive != null) {
-            telemetry.addData("02", "Right Drive: " + a_right_drive_power() + ", " + a_right_encoder_count());
+            telemetry.addData("002", "Right Drive: " + a_right_drive_power() + ", " + a_right_encoder_count());
         }
         if(v_first_arm != null){
-            telemetry.addData("03", "First Arm: " + v_first_arm.getPower());
+            telemetry.addData("003", "First Arm: " + v_first_arm.getPower());
         }
         if(v_second_arm != null) {
-            telemetry.addData("04", "Second Arm: " + v_second_arm.getPower());
+            telemetry.addData("004", "Second Arm: " + v_second_arm.getPower());
         }
         if(v_winch != null) {
-            telemetry.addData("05", "Winch Drive: " + a_winch_power());
+            telemetry.addData("005", "Winch Drive: " + a_winch_power());
         }
         if(v_claw != null){
-            telemetry.addData("06", "Claw: " + v_claw.getPower());
+            telemetry.addData("006", "Claw: " + v_claw.getPower());
         }
         if(v_tab_slapper != null) {
-            telemetry.addData("07", "Tab Slapper: " + v_tab_slapper.getPosition());
+            telemetry.addData("007", "Tab Slapper: " + v_tab_slapper.getPosition());
         }
         if(v_climber_dropper != null) {
-            telemetry.addData("08", "Climber Dropper: " + v_climber_dropper.getPosition());
+            telemetry.addData("008", "Climber Dropper: " + v_climber_dropper.getPosition());
         }
     }
 
-    public void set_first_message (String p_message)
-
-    {
-        telemetry.addData ( "00", p_message);
-
+    public void set_first_message (String p_message) {
+        telemetry.addData("0000", p_message);
     }
-    public void set_error_message (String p_message)
-
-    {
+    public void set_error_message (String p_message) {
         set_first_message("ERROR: " + p_message);
-
     }
-    public void update_gamepad_telemetry ()
+    public void update_gamepad_telemetry () {
+        telemetry.addData("100", "GAMEPAD 1-------------------------------");
+        telemetry.addData ("101", "GP1 LJoy: " + -gamepad1.left_stick_y);
+        telemetry.addData ("102", "GP1 RJoy: " + -gamepad1.right_stick_y);
+        telemetry.addData ("103", "GP1 LT: " + gamepad1.left_trigger + " (claw)");
+        telemetry.addData ("104", "GP1 LB: " + gamepad1.left_bumper + " (claw)");
+        telemetry.addData ("105", "GP1 RT: " + gamepad1.right_trigger);
+        telemetry.addData ("106", "GP1 RB: " + gamepad1.right_bumper);
+        telemetry.addData("107", "GP1 A: " + gamepad1.a);
+        telemetry.addData("108", "GP1 B: " + gamepad1.b);
 
-    {
-        telemetry.addData ("05", "GP1 Left: " + -gamepad1.left_stick_y);
-        telemetry.addData ("06", "GP1 Right: " + -gamepad1.right_stick_y);
-        telemetry.addData ("07", "GP2 Left: " + -gamepad2.left_stick_y);
-        telemetry.addData ("08", "GP2 Right: " + -gamepad2.right_stick_y);
-        telemetry.addData ("09", "GP2 X: " + gamepad2.x);
-        telemetry.addData ("09.1", "GP2 Y: " + gamepad2.y);
-        telemetry.addData ("10", "GP1 LT: " + gamepad1.left_trigger);
-        telemetry.addData ("11", "GP1 RT: " + gamepad1.right_trigger);
-        telemetry.addData ("12", "GP1 LB: " + gamepad1.left_bumper);
-        telemetry.addData ("13", "GP2 RT: " + gamepad2.right_trigger);
-        telemetry.addData ("14", "GP2 RB: " + gamepad2.right_bumper);
+        telemetry.addData ("200", "GAMEPAD 2-------------------------------");
+        telemetry.addData ("201", "GP2 LJoy: " + -gamepad2.left_stick_y);
+        telemetry.addData ("202", "GP2 RJoy: " + -gamepad2.right_stick_y);
+        telemetry.addData ("203", "GP2 LT: " + gamepad2.left_trigger);
+        telemetry.addData ("204", "GP2 LB: " + gamepad2.left_bumper);
+        telemetry.addData ("205", "GP2 RT: " + gamepad2.right_trigger);
+        telemetry.addData ("206", "GP2 RB: " + gamepad2.right_bumper);
+        telemetry.addData ("207", "GP2 X: " + gamepad2.x);
+        telemetry.addData("208", "GP2 Y: " + gamepad2.y);
+        telemetry.addData("209", "GP2 START: " + gamepad2.start);
+        telemetry.addData("210", "GP2 BACK: " + gamepad2.back);
 
 
-        telemetry.addData("100", "GP1 A: " + gamepad1.a);
     } // update_gamepad_telemetry
 
 
@@ -389,78 +321,6 @@ public class Hardware extends OpMode {
     @Override public void stop ()
     {
     } // stop
-
-    //--------------------------------------------------------------------------
-    //
-    // scale_motor_power
-    //
-    /**
-     * Scale the joystick input using a nonlinear algorithm.
-     *
-     */
-    float choose_motor_power (float p_power, int scaleIndex)
-    {
-        float[] speeds = {0.00f, 0.6f, 0.8f, 1.0f};
-        float selectedSpeed;
-        if (Range.clip (p_power, -1, 1) > 0) {
-            selectedSpeed = speeds[scaleIndex];
-        } else {
-            selectedSpeed = -speeds[scaleIndex];
-        }
-
-        return selectedSpeed;
-    }
-
-    float scale_motor_power (float p_power)
-    {
-        float speed = 0.00f;
-        if (Range.clip (p_power, -1, 1) > 0) {
-            float[] speeds = {0.00f, 0.6f, 0.8f, 1.0f};
-        } else if (Range.clip (p_power, -1, 1) < 0) {
-            float[] speeds = {0.00f, -0.6f, -0.8f, -1.0f};
-        }
-        //
-        // Assume no scaling.
-        //
-        float l_scale = 0.0f;
-
-        //
-        // Ensure the values are legal.
-        //
-        float l_power = Range.clip (p_power, -1, 1);
-
-        float[] l_array =
-                { 0.00f, 0.05f, 0.09f, 0.10f, 0.12f
-                        , 0.15f, 0.18f, 0.24f, 0.30f, 0.36f
-                        , 0.43f, 0.50f, 0.60f, 0.72f, 0.85f
-                        , 1.00f, 1.00f
-                };
-
-        //
-        // Get the corresponding index for the specified argument/parameter.
-        //
-        int l_index = (int)(l_power * 16.0);
-        if (l_index < 0)
-        {
-            l_index = -l_index;
-        }
-        else if (l_index > 16)
-        {
-            l_index = 16;
-        }
-
-        if (l_power < 0)
-        {
-            l_scale = -l_array[l_index];
-        }
-        else
-        {
-            l_scale = l_array[l_index];
-        }
-
-        return l_scale;
-
-    } // scale_motor_power
 
     //--------------------------------------------------------------------------
     //
@@ -521,21 +381,15 @@ public class Hardware extends OpMode {
         }
         return l_return;
     }
-    //--------------------------------------------------------------------------
-    //
-    // set_drive_power
-    //
-    /**
-     * Scale the joystick input using a nonlinear algorithm.
-     */
-    void set_drive_power (double p_left_power, double p_right_power)
+    /////////////////////////////////////////////////////////////////////////////
+    //SET DRIVE POWERS
 
+    void set_drive_power(double p_left_power, double p_right_power)
     {
+        set_left_power(p_left_power);
+        set_right_power(p_right_power);
+    }
 
-
-
-
-    } // set_drive_power
     void set_right_power (double p_right_power)
     {
         if (v_motor_right_drive != null)
@@ -561,9 +415,8 @@ public class Hardware extends OpMode {
     }
 
 
-    //set_arm_power
+    //SET ARM POWERS
     void set_arm_power (double p_first_power, double p_second_power)
-
     {
         if (v_first_arm != null)
         {
@@ -574,6 +427,7 @@ public class Hardware extends OpMode {
             v_second_arm.setPower (p_second_power);
         }
     }
+
     void set_first_arm_power (double p_first_power)
     {
         if (v_first_arm != null)
@@ -581,6 +435,7 @@ public class Hardware extends OpMode {
             v_first_arm.setPower(p_first_power);
         }
     }
+
     void set_second_arm_power (double p_second_power)
     {
         if (v_second_arm != null)
@@ -1051,12 +906,12 @@ public class Hardware extends OpMode {
 
     //////////////////////////////////////////////////////////////////////////////
     //HOOK
-    void hook (){
+    void hook_out (){
         if (v_hook.getPosition() < 0.9) {
             v_hook.setPosition(v_hook.getPosition() + .05);
         }
     }
-    void hookBack (){
+    void hook_in (){
         if (v_hook.getPosition() > 0.25) {
             v_hook.setPosition (v_hook.getPosition() - .05);
         }
@@ -1065,28 +920,28 @@ public class Hardware extends OpMode {
 
     //////////////////////////////////////////////////////////////////////////////
     // TAB SLAPPER
-    void tab_slapper (){
-        if (v_tab_slapper.getPosition() > 0.2D) {
-            v_tab_slapper.setPosition(0.2D);
+    void tab_slapper_out (){
+        if (v_tab_slapper.getPosition() > tab_slapper_out) {
+            v_tab_slapper.setPosition(tab_slapper_out);
         }
     }
-    void tab_slapper_back(){
-        if (v_tab_slapper.getPosition() < 0.7D) {
-            v_tab_slapper.setPosition(0.7D);
+    void tab_slapper_in(){
+        if (v_tab_slapper.getPosition() < tab_slapper_in) {
+            v_tab_slapper.setPosition(tab_slapper_in);
         }
     }
 
 
     /////////////////////////////////////////////////////////////////////////////
     //CLIMBER DROPPER
-    void climber_dropper() {
-        if(v_climber_dropper.getPosition() > 0.1D){
-            v_climber_dropper.setPosition(0.1D);
+    void climber_dropper_in() {
+        if(v_climber_dropper.getPosition() > climber_dropper_in){
+            v_climber_dropper.setPosition(climber_dropper_in);
         }
     }
-    void climber_dropper_back(){
-        if(v_climber_dropper.getPosition() < 0.7D){
-            v_climber_dropper.setPosition(0.7D);
+    void climber_dropper_out(){
+        if(v_climber_dropper.getPosition() < climber_dropper_out){
+            v_climber_dropper.setPosition(climber_dropper_out);
         }
     }
 
