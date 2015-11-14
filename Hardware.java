@@ -361,26 +361,29 @@ public class Hardware extends OpMode {
 
     public void update_gamepad_telemetry () {
         telemetry.addData("100", "GAMEPAD 1-------------------------------");
-        telemetry.addData ("101", "GP1 LJoy: " + -gamepad1.left_stick_y);
-        telemetry.addData ("102", "GP1 RJoy: " + -gamepad1.right_stick_y);
-        telemetry.addData ("103", "GP1 LT: " + gamepad1.left_trigger + " (claw)");
-        telemetry.addData ("104", "GP1 LB: " + gamepad1.left_bumper + " (claw)");
-        telemetry.addData ("105", "GP1 RT: " + gamepad1.right_trigger);
-        telemetry.addData ("106", "GP1 RB: " + gamepad1.right_bumper);
-        telemetry.addData("107", "GP1 A: " + gamepad1.a);
-        telemetry.addData("108", "GP1 B: " + gamepad1.b);
-
-        telemetry.addData ("200", "GAMEPAD 2-------------------------------");
-        telemetry.addData ("201", "GP2 LJoy: " + -gamepad2.left_stick_y);
-        telemetry.addData ("202", "GP2 RJoy: " + -gamepad2.right_stick_y);
-        telemetry.addData ("203", "GP2 LT: " + gamepad2.left_trigger);
-        telemetry.addData ("204", "GP2 LB: " + gamepad2.left_bumper);
-        telemetry.addData ("205", "GP2 RT: " + gamepad2.right_trigger);
-        telemetry.addData ("206", "GP2 RB: " + gamepad2.right_bumper);
-        telemetry.addData ("207", "GP2 X: " + gamepad2.x);
-        telemetry.addData("208", "GP2 Y: " + gamepad2.y);
-        telemetry.addData("209", "GP2 START: " + gamepad2.start);
-        telemetry.addData("210", "GP2 BACK: " + gamepad2.back);
+        if(gamepad1 != null) {
+            telemetry.addData("101", "GP1 LJoy: " + -gamepad1.left_stick_y);
+            telemetry.addData("102", "GP1 RJoy: " + -gamepad1.right_stick_y);
+            telemetry.addData("103", "GP1 LT: " + gamepad1.left_trigger + " (claw)");
+            telemetry.addData("104", "GP1 LB: " + gamepad1.left_bumper + " (claw)");
+            telemetry.addData("105", "GP1 RT: " + gamepad1.right_trigger);
+            telemetry.addData("106", "GP1 RB: " + gamepad1.right_bumper);
+            telemetry.addData("107", "GP1 A: " + gamepad1.a);
+            telemetry.addData("108", "GP1 B: " + gamepad1.b);
+        }
+        if(gamepad2 != null) {
+            telemetry.addData("200", "GAMEPAD 2-------------------------------");
+            telemetry.addData("201", "GP2 LJoy: " + -gamepad2.left_stick_y);
+            telemetry.addData("202", "GP2 RJoy: " + -gamepad2.right_stick_y);
+            telemetry.addData("203", "GP2 LT: " + gamepad2.left_trigger);
+            telemetry.addData("204", "GP2 LB: " + gamepad2.left_bumper);
+            telemetry.addData("205", "GP2 RT: " + gamepad2.right_trigger);
+            telemetry.addData("206", "GP2 RB: " + gamepad2.right_bumper);
+            telemetry.addData("207", "GP2 X: " + gamepad2.x);
+            telemetry.addData("208", "GP2 Y: " + gamepad2.y);
+            telemetry.addData("209", "GP2 START: " + gamepad2.start);
+            telemetry.addData("210", "GP2 BACK: " + gamepad2.back);
+        }
     } // update_gamepad_telemetry
 
     double a_left_drive_power () {
