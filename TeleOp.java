@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.util.Range;
 
 public class TeleOp extends Hardware {
 
-    int driveScale = 0;
+    int driveScale = 1;
     double[] driveSpeeds = {0.6, 0.8, 1.0};
     double firstArmSpeed = 0.3;
     double firstArmSpeedBack = 0.2;
@@ -55,14 +55,15 @@ public class TeleOp extends Hardware {
         //////////////////////////////////////////////////////////////////////////////
         //DRIVE
         //DRIVE SCALE
-        if (gamepad1.right_trigger > 0.1 && driveScale <= 2) {
+        if (gamepad1.right_trigger > 0.1 && driveScale < 2) {
             driveScale++;
-        } else if (gamepad1.right_bumper && driveScale >= 0) {
+        } else if (gamepad1.right_bumper && driveScale > 0) {
             driveScale--;
         }
 
         //LEFT
         double speed = driveSpeeds[driveScale];
+        //^ negative because robot goes backwards compared to original testing bot
 
         if (Range.clip(-gamepad1.left_stick_y, -1, 1) > 0.1) {
             set_left_power(speed);

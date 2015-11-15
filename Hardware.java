@@ -465,14 +465,14 @@ public class Hardware extends OpMode {
 
     //RUN WITH
     public void run_using_left_drive_encoder () {
-        if (v_motor_left_drive != null) {
-            v_motor_left_drive.setChannelMode( DcMotorController.RunMode.RUN_USING_ENCODERS);
+        if (v_motor_left_drive_back != null) {
+            v_motor_left_drive_back.setChannelMode( DcMotorController.RunMode.RUN_USING_ENCODERS);
         }
     } // run_using_left_drive_encoder
 
     public void run_using_right_drive_encoder () {
-        if (v_motor_right_drive != null) {
-            v_motor_right_drive.setChannelMode( DcMotorController.RunMode.RUN_USING_ENCODERS);
+        if (v_motor_right_drive_back != null) {
+            v_motor_right_drive_back.setChannelMode( DcMotorController.RunMode.RUN_USING_ENCODERS);
         }
     } // run_using_right_drive_encoder
 
@@ -485,17 +485,17 @@ public class Hardware extends OpMode {
 
     //RUN WITHOUT ENCODERS
     public void run_without_left_drive_encoder () {
-        if (v_motor_left_drive != null) {
-            if (v_motor_left_drive.getChannelMode () == DcMotorController.RunMode.RESET_ENCODERS) {
-                v_motor_left_drive.setChannelMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
+        if (v_motor_left_drive_back != null) {
+            if (v_motor_left_drive_back.getChannelMode () == DcMotorController.RunMode.RESET_ENCODERS) {
+                v_motor_left_drive_back.setChannelMode(DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
             }
         }
     } // run_without_left_drive_encoder
 
     public void run_without_right_drive_encoder () {
-        if (v_motor_right_drive != null) {
-            if (v_motor_right_drive.getChannelMode () == DcMotorController.RunMode.RESET_ENCODERS) {
-                v_motor_right_drive.setChannelMode( DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
+        if (v_motor_right_drive_back != null) {
+            if (v_motor_right_drive_back.getChannelMode () == DcMotorController.RunMode.RESET_ENCODERS) {
+                v_motor_right_drive_back.setChannelMode( DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
             }
         }
     } // run_without_right_drive_encoder
@@ -509,14 +509,14 @@ public class Hardware extends OpMode {
 
     //RESET
     public void reset_left_drive_encoder () {
-        if (v_motor_left_drive != null) {
-            v_motor_left_drive.setChannelMode( DcMotorController.RunMode.RESET_ENCODERS);
+        if (v_motor_left_drive_back != null) {
+            v_motor_left_drive_back.setChannelMode( DcMotorController.RunMode.RESET_ENCODERS);
         }
     } // reset_left_drive_encoder
 
     public void reset_right_drive_encoder () {
-        if (v_motor_right_drive != null) {
-            v_motor_right_drive.setChannelMode( DcMotorController.RunMode.RESET_ENCODERS);
+        if (v_motor_right_drive_back != null) {
+            v_motor_right_drive_back.setChannelMode( DcMotorController.RunMode.RESET_ENCODERS);
         }
     } // reset_right_drive_encoder
 
@@ -557,16 +557,16 @@ public class Hardware extends OpMode {
     //ENCODER COUNTS
     int a_left_encoder_count () {
         int l_return = 0;
-        if (v_motor_left_drive != null) {
-            l_return = (int) (v_motor_left_drive.getCurrentPosition () * (diameter * Math.PI) / 1120);
+        if (v_motor_left_drive_back != null) {
+            l_return = (int) (Math.abs (v_motor_left_drive_back.getCurrentPosition ()) * (diameter * Math.PI) / 1120);
         }
         return l_return;
     } // a_left_encoder_count
 
     int a_right_encoder_count () {
         int l_return = 0;
-        if (v_motor_right_drive != null) {
-            l_return = (int) (v_motor_right_drive.getCurrentPosition () * (diameter * Math.PI) / 1120);
+        if (v_motor_right_drive_back != null) {
+            l_return = (int) (Math.abs(v_motor_right_drive_back.getCurrentPosition ()) * (diameter * Math.PI) / 1120);
         }
         return l_return;
     } // a_right_encoder_count
@@ -576,8 +576,8 @@ public class Hardware extends OpMode {
     //HAVE REACHED
     boolean has_left_drive_encoder_reached (double p_count) {
         boolean l_return = false;
-        if (v_motor_left_drive != null){
-            if (Math.abs (v_motor_left_drive.getCurrentPosition () * (diameter * Math.PI) / 1120) > p_count) {
+        if (v_motor_left_drive_back != null){
+            if (Math.abs (v_motor_left_drive_back.getCurrentPosition () * (diameter * Math.PI) / 1120) > p_count) {
                 l_return = true;
             }
         }
@@ -586,8 +586,8 @@ public class Hardware extends OpMode {
 
     boolean has_right_drive_encoder_reached (double p_count) {
         boolean l_return = false;
-        if (v_motor_right_drive != null) {
-            if (Math.abs (v_motor_right_drive.getCurrentPosition () * (diameter * Math.PI) / 1120) > p_count) {
+        if (v_motor_right_drive_back != null) {
+            if (Math.abs (v_motor_right_drive_back.getCurrentPosition () * (diameter * Math.PI) / 1120) > p_count) {
                 l_return = true;
             }
         }

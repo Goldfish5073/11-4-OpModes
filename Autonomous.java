@@ -18,6 +18,7 @@ public class Autonomous extends Hardware
 {
     String step;
     FtcConfig ftcConfig=new FtcConfig();
+    float gyroTurnSpeed = 0.4f;
 
     public Autonomous()
     {
@@ -56,10 +57,13 @@ public class Autonomous extends Hardware
     GyroTurn gyroTurn1 = new GyroTurn();
     GyroTurn gyroTurn2 = new GyroTurn();
     GyroTurn gyroTurnM = new GyroTurn();
+    Pause pauseGyro = new Pause();
     Pause pause1 = new Pause();
     Pause pause2 = new Pause();
     Pause pauseM = new Pause();
     Drive driveButton1 = new Drive();
+    Drive driveButton2 = new Drive();
+    Stop stop1 = new Stop();
 
     @Override public void start ()
     {
@@ -115,7 +119,9 @@ public class Autonomous extends Hardware
         pause1.reset();
         pause2.reset();
         pauseM.reset();
+        pauseGyro.reset();
         driveButton1.reset();
+        driveButton2.reset();
 
 
 
@@ -151,12 +157,12 @@ public class Autonomous extends Hardware
                 step = "drive";
             } else if (pause1.action(1)) {
                 step = "pause";
-            } else if (gyroTurn1.action(0.2f, 40)) {
+            } else if (gyroTurn1.action(gyroTurnSpeed, 40)) {
                 step = "gyro turn";
                 ///encoder in inches?
             } else if (drive2.action(0.5f, 37)) {
                 step = "drive 2";
-            } else if (gyroTurn2.action(0.2f, 45)){
+            } else if (gyroTurn2.action(gyroTurnSpeed, 45)){
                 step = "gyro turn2";
             } else if (drive3.action(0.2f, 8)){
                 step = "drive 3";
@@ -168,8 +174,10 @@ public class Autonomous extends Hardware
             } else if (moveArm1.action()) {
                 step = "move arm";
             } //else if (pressButton1.action()) {}
-            else if (driveButton1.action(0.5f, 2)) {
+            else if (driveButton1.action(0.5f, 2) && !beaconPosition.equals("unknown")) {
                 step = "drive button";
+            } else if (driveButton2.action(-0.5f, 2)){
+                step = "drive button back";
             }
         }
         else if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_MOUNTAIN) {
@@ -179,7 +187,7 @@ public class Autonomous extends Hardware
                 step = "driveM";
             } else if (pauseM.action(1)) {
                 step = "pauseM";
-            } else if (gyroTurnM.action(0.2f, 40)) {
+            } else if (gyroTurnM.action(gyroTurnSpeed, 130)) {
                 step = "gyro turnM";
                 ///encoder in inches?
             } else if (driveM2.action(0.5f, 32)) {
@@ -199,14 +207,8 @@ public class Autonomous extends Hardware
 
 
 
-
-    void pause ()
-    {
-        if (have_drive_encoders_reset())
-        {
-            v_state++;
-        }
-    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //HELPER METHODS
 
     public void color()
     {
@@ -370,12 +372,19 @@ public class Autonomous extends Hardware
             if (state == 1) {
                 return false;
             }
-
-
             if (System.currentTimeMillis() > (startTime + seconds * 1000)) {
                 state = 1;
             }
+            return true;
+        }
+    }
 
+    private class Stop {
+        Stop () {
+        }
+        boolean action() {
+            reset_drive_encoders();
+            set_drive_power (0.0f, 0.0f);
             return true;
         }
     }
@@ -390,10 +399,12 @@ public class Autonomous extends Hardware
         }
 
         void reset() {
+            reset_drive_encoders();
             state = -1;
         }
 
         boolean action(float speed, int encoderCount) {
+            speed = -speed; //robot is backwards
             run_using_encoders();
             if (state == -1){
                 set_drive_power(speed, speed);
@@ -405,17 +416,18 @@ public class Autonomous extends Hardware
             }
 
 
-            if (have_drive_encoders_reached (encoderCount, encoderCount))
-            {
+            if (have_drive_encoders_reached (encoderCount, encoderCount)) {
                 reset_drive_encoders ();
                 set_drive_power (0.0f, 0.0f);
                 state = 2;
             }
 
-            if (state == 2 && have_drive_encoders_reset ())
-            {
+            if (state == 2 && have_drive_encoders_reset ()) {
                state = 1;
+            } else {
+                reset_drive_encoders();
             }
+            
             telemetry.addData("17", "State: " + state);
 
             return true;
@@ -436,6 +448,8 @@ public class Autonomous extends Hardware
         }
 
         boolean action(float speed, int encoderCount) {
+            speed = -speed; //robot is backwards
+
             if (state == -1){
                 if (ftcConfig.param.colorIsRed){
                     set_drive_power(speed, -speed);
@@ -484,10 +498,17 @@ public class Autonomous extends Hardware
         }
 
         boolean action(float speed, int desiredHeading) {
+            speed = -speed; //robot is backwards
+            if (state == 1){
+                set_drive_power (0.0f, 0.0f);
+                return false;
+            }
             if (state == -1){
+                pauseGyro.reset(); //resets abort code
+                reset_drive_encoders();
                 //sets turning direction based on color
                 sensorGyro.resetZAxisIntegrator();
-                if (ftcConfig.param.colorIsRed){
+                if (!ftcConfig.param.colorIsRed){
                     set_drive_power(-speed, speed);
                 }
                 else {
@@ -496,13 +517,18 @@ public class Autonomous extends Hardware
                 state = 0;
             }
 
-            if (state == 1)
-            {
-                return false;
+            if (state == 2) {
+                set_drive_power (0.0f, 0.0f);
+                reset_drive_encoders();
+            } else if(!pauseGyro.action(10)){
+                return stop1.action();
             }
 
-            if (ftcConfig.param.colorIsRed)
-            {
+            if (state == 2 && have_drive_encoders_reset ()) {
+                state = 1;
+            }
+
+            if (ftcConfig.param.colorIsRed) {
                 desiredHeading = 360 - desiredHeading;
             }
 
@@ -515,10 +541,10 @@ public class Autonomous extends Hardware
             //turn until gyro reaches approximate correct place
             //heading
             if (Math.abs(heading - desiredHeading) < 5){
-                reset_drive_encoders ();
-                set_drive_power (0.0f, 0.0f);
-                state = 1;
+                state = 2;
             }
+
+
             telemetry.addData("Desired Heading", desiredHeading);
             telemetry.addData("Color", ftcConfig.param.colorIsRed);
 
@@ -530,8 +556,11 @@ public class Autonomous extends Hardware
         }
     }
 
+
+
     void drive (float speed, int encoderCount)
     {
+        speed = -speed; //robot is backwards
 
         run_using_encoders();
         set_drive_power(speed, speed);
