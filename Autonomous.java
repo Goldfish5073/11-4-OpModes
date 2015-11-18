@@ -18,7 +18,7 @@ public class Autonomous extends Hardware
 {
     String step;
     FtcConfig ftcConfig=new FtcConfig();
-    float gyroTurnSpeed = 0.4f;
+    float gyroTurnSpeed = 0.3f;
 
     public Autonomous()
     {
@@ -132,6 +132,7 @@ public class Autonomous extends Hardware
 
     {
 
+
         telemetry.clearData();
         // can use configured variables here
         telemetry.addData("ColorIsRed", Boolean.toString(ftcConfig.param.colorIsRed));
@@ -160,15 +161,15 @@ public class Autonomous extends Hardware
             } else if (gyroTurn1.action(gyroTurnSpeed, 40)) {
                 step = "gyro turn";
                 ///encoder in inches?
-            } else if (drive2.action(0.5f, 37)) {
+            } else if (drive2.action(0.5f, 60)) {
                 step = "drive 2";
-            } else if (gyroTurn2.action(gyroTurnSpeed, 45)){
-                step = "gyro turn2";
-            } else if (drive3.action(0.2f, 8)){
-                step = "drive 3";
-            } else if (pause2.action(5)){
+            } else if (pause2.action(1)){
                 step = "pause 2";
-            }
+            } else if (gyroTurn2.action(gyroTurnSpeed, 40)){
+                step = "gyro turn2";
+            }  else if (drive3.action(0.2f, 8)){
+                step = "drive 3";
+            } /*
             else if (readBeacon1.action()) {
                 step = "read beacon";
             } else if (moveArm1.action()) {
@@ -178,7 +179,7 @@ public class Autonomous extends Hardware
                 step = "drive button";
             } else if (driveButton2.action(-0.5f, 2)){
                 step = "drive button back";
-            }
+            }*/
         }
         else if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_MOUNTAIN) {
             if (delayM.action()) {
@@ -200,7 +201,6 @@ public class Autonomous extends Hardware
             //
             color();
             update_telemetry(); // Update common telemetry
-            telemetry.addData("18", "State: " + v_state);
 
     } // loop
 
@@ -294,8 +294,7 @@ public class Autonomous extends Hardware
         MoveArm(){
             state = -1;
         }
-        void reset()
-        {
+        void reset() {
             state = -1;
         }
         boolean action(){
@@ -311,26 +310,7 @@ public class Autonomous extends Hardware
             return true;
         }
     }
-    private class PressButton {
-        int state;
-        PressButton() {
-            state = -1;
-        }
-        void reset()
-        {
-            state = -1;
-        }
-        boolean action(){
-            if (state == 1){
-                return false;
-            }
 
-            drive(1.0f, 2);
-
-            state = 1;
-            return true;
-        }
-    }
 
     private class Delay {
         int state;
@@ -392,10 +372,11 @@ public class Autonomous extends Hardware
 
     private class Drive {
         int state;
+        float  b = 0;
 
         Drive() {
             state = -1;
-            run_using_encoders();
+            // run_using_encoders();
         }
 
         void reset() {
@@ -405,30 +386,52 @@ public class Autonomous extends Hardware
 
         boolean action(float speed, int encoderCount) {
             speed = -speed; //robot is backwards
-            run_using_encoders();
-            if (state == -1){
-                set_drive_power(speed, speed);
-                state = 0;
-            }
-            if (state == 1)
-            {
+
+            if (state == 1) {
+                b = 3;
                 return false;
             }
+
+           // set_drive_power(speed, speed);
+            if (state == -1){
+                reset_drive_encoders();
+                b = speed;
+                state = 3;
+                return true;
+            }
+
+            if (state == 3){
+                if (have_drive_encoders_reset()){
+                    state = 0;
+                }
+                return true;
+            }
+
+            if (state == 2) {
+                b = 2;
+                // reset_drive_encoders();
+                if (have_drive_encoders_reset()){
+                    b = 3;
+                    state = 1;
+                }
+                return true;
+            }
+
+
+            run_using_encoders();
+            set_drive_power(speed, speed);
+            b = speed;
 
 
             if (have_drive_encoders_reached (encoderCount, encoderCount)) {
                 reset_drive_encoders ();
+                b = 4;
                 set_drive_power (0.0f, 0.0f);
                 state = 2;
             }
 
-            if (state == 2 && have_drive_encoders_reset ()) {
-               state = 1;
-            } else {
-                reset_drive_encoders();
-            }
-            
             telemetry.addData("17", "State: " + state);
+            telemetry.addData("0000", "b: " + b);
 
             return true;
         }
@@ -482,12 +485,14 @@ public class Autonomous extends Hardware
     }
 
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //GYRO TURN
     private class GyroTurn {
         int state;
 
         GyroTurn() {
             state = -1;
-            run_using_encoders();
+            // run_using_encoders();
         }
 
         void reset() {
@@ -499,33 +504,45 @@ public class Autonomous extends Hardware
 
         boolean action(float speed, int desiredHeading) {
             speed = -speed; //robot is backwards
+
             if (state == 1){
-                set_drive_power (0.0f, 0.0f);
                 return false;
             }
+
+            /*if(!pauseGyro.action(10)){
+                stop1.action();
+            }*/
+
             if (state == -1){
-                pauseGyro.reset(); //resets abort code
+                //pauseGyro.reset(); //resets abort code
                 reset_drive_encoders();
-                //sets turning direction based on color
                 sensorGyro.resetZAxisIntegrator();
-                if (!ftcConfig.param.colorIsRed){
-                    set_drive_power(-speed, speed);
+                state = 3;
+                return true;
+            }
+
+            if (state == 3) {
+                if (have_drive_encoders_reset()){
+                    state = 0;
                 }
-                else {
-                    set_drive_power(speed, -speed);
-                }
-                state = 0;
+                return true;
             }
 
             if (state == 2) {
-                set_drive_power (0.0f, 0.0f);
-                reset_drive_encoders();
-            } else if(!pauseGyro.action(10)){
-                return stop1.action();
+                // set_drive_power(0.0f, 0.0f);
+                //reset_drive_encoders();
+                if (have_drive_encoders_reset()) {
+                    state = 1;
+                }
+                return true;
             }
 
-            if (state == 2 && have_drive_encoders_reset ()) {
-                state = 1;
+            run_using_encoders();
+            if (!ftcConfig.param.colorIsRed){
+                set_drive_power(-speed, speed);
+            }
+            else {
+                set_drive_power(speed, -speed);
             }
 
             if (ftcConfig.param.colorIsRed) {
@@ -538,11 +555,13 @@ public class Autonomous extends Hardware
 
             heading = sensorGyro.getHeading();
 
-            //turn until gyro reaches approximate correct place
-            //heading
             if (Math.abs(heading - desiredHeading) < 5){
-                state = 2;
-            }
+                    state = 2;
+                    sensorGyro.resetZAxisIntegrator();
+                    reset_drive_encoders();
+                    set_drive_power(0.0f, 0.0f);
+                }
+
 
 
             telemetry.addData("Desired Heading", desiredHeading);
@@ -552,10 +571,17 @@ public class Autonomous extends Hardware
             //if ^ is less than a given approximate range 2
             //then stop!
 
-        return true;
+         return true;
         }
     }
 
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// not sure needed
 
 
     void drive (float speed, int encoderCount)
@@ -569,6 +595,26 @@ public class Autonomous extends Hardware
             reset_drive_encoders ();
             set_drive_power (0.0f, 0.0f);
             v_state++;
+        }
+    }
+    private class PressButton {
+        int state;
+        PressButton() {
+            state = -1;
+        }
+        void reset()
+        {
+            state = -1;
+        }
+        boolean action(){
+            if (state == 1){
+                return false;
+            }
+
+            drive(1.0f, 2);
+
+            state = 1;
+            return true;
         }
     }
     //read beacon
