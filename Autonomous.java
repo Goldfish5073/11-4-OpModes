@@ -184,14 +184,14 @@ public class Autonomous extends Hardware
         else if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_MOUNTAIN) {
             if (delayM.action()) {
                 step = "delayM";
-            } else if (driveM.action(0.5f, 20)) {
+            } else if (driveM.action(0.3f, 30)) {
                 step = "driveM";
             } else if (pauseM.action(1)) {
                 step = "pauseM";
-            } else if (gyroTurnM.action(gyroTurnSpeed, 130)) {
+            } else if (gyroTurnM.action(gyroTurnSpeed, 90)) {
                 step = "gyro turnM";
                 ///encoder in inches?
-            } else if (driveM2.action(0.5f, 32)) {
+            } else if (driveM2.action(0.5f, 20)) {
                 step = "drive M2";
             }
         }

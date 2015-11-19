@@ -7,14 +7,15 @@ import com.qualcomm.robotcore.util.Range;
 
 public class TeleOp extends Hardware {
 
-    int driveScale = 1;
+    int driveScale = 2;
     double[] driveSpeeds = {0.6, 0.8, 1.0};
-    double firstArmSpeed = 0.3;
-    double firstArmSpeedBack = 0.2;
-    double secondArmSpeed = 0.5;
-    double secondArmSpeedBack = 0.25;
+    double firstArmSpeed = 0.3; //0.3 top
+    double firstArmSpeedBack = 0.3; //0.2
+    double secondArmSpeed = 0.4;//0.5
+    double secondArmSpeedBack = 0.2;//0.25 bottom
     double winchSpeed = 1.0;
     double clawSpeed = 1.0;
+    //firstArm is foremarm (top), secondArm is bicep (bottom)
 
     /////////////////////////////////////////////////////////////////////////////////////
     //CONTROLS

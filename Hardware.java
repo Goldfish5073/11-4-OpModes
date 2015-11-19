@@ -21,7 +21,7 @@ public class Hardware extends OpMode {
     double tab_slapper_in = 0.9D;
     double tab_slapper_out = 0.3D;
 
-    double climber_dropper_in = 0.1D;
+    double climber_dropper_in = 0.03D;
     double climber_dropper_out = 0.9D;
 
 
@@ -178,7 +178,7 @@ public class Hardware extends OpMode {
         }
         try {
             v_servo_push_beacon = hardwareMap.servo.get ("push_beacon");
-            v_servo_push_beacon.setPosition (0.0D);
+            v_servo_push_beacon.setPosition (1.0D);
         } catch (Exception p_exception) {
             m_warning_message ("push_beacon");
             DbgLog.msg (p_exception.getLocalizedMessage ());
