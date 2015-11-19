@@ -191,7 +191,7 @@ public class Autonomous extends Hardware
             } else if (gyroTurnM.action(gyroTurnSpeed, 90)) {
                 step = "gyro turnM";
                 ///encoder in inches?
-            } else if (driveM2.action(0.5f, 20)) {
+            } else if (driveM2.action(0.5f, 30)) {
                 step = "drive M2";
             }
         }
