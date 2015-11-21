@@ -7,14 +7,17 @@ import com.qualcomm.robotcore.util.Range;
 
 public class TeleOp extends Hardware {
 
-    int driveScale = 2;
-    double[] driveSpeeds = {0.6, 0.8, 1.0};
+    /////////////////////////////////////////////////////////////////////////////////////
+    //SPEED VARIABLES
+    double[] driveSpeeds = {0.3, 0.6, 0.8, 1.0};
     double firstArmSpeed = 0.3; //0.3 top
     double firstArmSpeedBack = 0.3; //0.2
     double secondArmSpeed = 0.4;//0.5
     double secondArmSpeedBack = 0.2;//0.25 bottom
     double winchSpeed = 1.0;
     double clawSpeed = 1.0;
+
+    int driveScale = driveSpeeds.length - 1;
     //firstArm is foremarm (top), secondArm is bicep (bottom)
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -34,7 +37,7 @@ public class TeleOp extends Hardware {
     GAMEPAD 2
     left joystick = first arm
     right joystick = second arm
-    right trigger = hook
+    right trigger = hook out
     right bumper = hook in
     x = tab slapper in
     y = tab slapper out
@@ -56,7 +59,7 @@ public class TeleOp extends Hardware {
         //////////////////////////////////////////////////////////////////////////////
         //DRIVE
         //DRIVE SCALE
-        if (gamepad1.right_trigger > 0.1 && driveScale < 2) {
+        if (gamepad1.right_trigger > 0.1 && driveScale < driveSpeeds.length - 1) {
             driveScale++;
         } else if (gamepad1.right_bumper && driveScale > 0) {
             driveScale--;

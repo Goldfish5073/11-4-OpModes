@@ -54,6 +54,7 @@ public class Autonomous extends Hardware
     Drive drive3 = new Drive();
     Drive driveM = new Drive();
     Drive driveM2 = new Drive();
+    Drive driveMBack = new Drive();
     GyroTurn gyroTurn1 = new GyroTurn();
     GyroTurn gyroTurn2 = new GyroTurn();
     GyroTurn gyroTurnM = new GyroTurn();
@@ -61,6 +62,7 @@ public class Autonomous extends Hardware
     Pause pause1 = new Pause();
     Pause pause2 = new Pause();
     Pause pauseM = new Pause();
+    Pause pauseM2 = new Pause();
     Drive driveButton1 = new Drive();
     Drive driveButton2 = new Drive();
     Stop stop1 = new Stop();
@@ -113,12 +115,14 @@ public class Autonomous extends Hardware
 
         driveM.reset();
         driveM2.reset();
+        driveMBack.reset();
         gyroTurn1.reset();
         gyroTurn2.reset();
         gyroTurnM.reset();
         pause1.reset();
         pause2.reset();
         pauseM.reset();
+        pauseM2.reset();
         pauseGyro.reset();
         driveButton1.reset();
         driveButton2.reset();
@@ -184,14 +188,18 @@ public class Autonomous extends Hardware
         else if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_MOUNTAIN) {
             if (delayM.action()) {
                 step = "delayM";
-            } else if (driveM.action(0.3f, 30)) {
+            } else if (driveM.action(-0.3f, 40)) {
                 step = "driveM";
             } else if (pauseM.action(1)) {
                 step = "pauseM";
-            } else if (gyroTurnM.action(gyroTurnSpeed, 90)) {
-                step = "gyro turnM";
+            } else if (driveMBack.action(0.3f, 5)) {
+                step = "pauseMBack";
+            } else if (pauseM2.action(1)) {
+                step = "pauseM2";
+            }else if (gyroTurnM.action(gyroTurnSpeed, 80)) {
+                step = "gyroTurnM";
                 ///encoder in inches?
-            } else if (driveM2.action(0.5f, 30)) {
+            } else if (driveM2.action(-0.5f, 25)) {
                 step = "drive M2";
             }
         }
@@ -489,6 +497,7 @@ public class Autonomous extends Hardware
     //GYRO TURN
     private class GyroTurn {
         int state;
+        long startTime;
 
         GyroTurn() {
             state = -1;
@@ -509,10 +518,6 @@ public class Autonomous extends Hardware
                 return false;
             }
 
-            /*if(!pauseGyro.action(10)){
-                stop1.action();
-            }*/
-
             if (state == -1){
                 //pauseGyro.reset(); //resets abort code
                 reset_drive_encoders();
@@ -524,6 +529,7 @@ public class Autonomous extends Hardware
             if (state == 3) {
                 if (have_drive_encoders_reset()){
                     state = 0;
+                    startTime = System.currentTimeMillis();
                 }
                 return true;
             }
@@ -537,30 +543,32 @@ public class Autonomous extends Hardware
                 return true;
             }
 
-            run_using_encoders();
-            if (!ftcConfig.param.colorIsRed){
-                set_drive_power(-speed, speed);
-            }
-            else {
-                set_drive_power(speed, -speed);
-            }
 
-            if (ftcConfig.param.colorIsRed) {
-                desiredHeading = 360 - desiredHeading;
-            }
+            if (state == 0) {
+                run_using_encoders();
+                if (!ftcConfig.param.colorIsRed) {
+                    set_drive_power(-speed, speed);
+                } else {
+                    set_drive_power(speed, -speed);
+                }
 
-            xVal = sensorGyro.rawX();
-            yVal = sensorGyro.rawY();
-            zVal = sensorGyro.rawZ();
+                if (ftcConfig.param.colorIsRed) {
+                    desiredHeading = 360 - desiredHeading;
+                }
 
-            heading = sensorGyro.getHeading();
+                xVal = sensorGyro.rawX();
+                yVal = sensorGyro.rawY();
+                zVal = sensorGyro.rawZ();
 
-            if (Math.abs(heading - desiredHeading) < 5){
+                heading = sensorGyro.getHeading();
+
+                if (Math.abs(heading - desiredHeading) < 5 || System.currentTimeMillis() > (startTime + 5 * 1000)) {
                     state = 2;
                     sensorGyro.resetZAxisIntegrator();
                     reset_drive_encoders();
                     set_drive_power(0.0f, 0.0f);
                 }
+            }
 
 
 

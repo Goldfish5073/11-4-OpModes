@@ -24,6 +24,8 @@ public class Hardware extends OpMode {
     double climber_dropper_in = 0.03D;
     double climber_dropper_out = 0.9D;
 
+    double hook_in = 0.1D;
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //HARDWARE INITIALIZATION
@@ -161,7 +163,7 @@ public class Hardware extends OpMode {
         //SERVOS
         try {
             v_hook = hardwareMap.servo.get ("hook");
-            v_hook.setPosition(0.1D);
+            v_hook.setPosition(hook_in);
         } catch (Exception p_exception) {
             m_warning_message ("hook");
             DbgLog.msg (p_exception.getLocalizedMessage ());
