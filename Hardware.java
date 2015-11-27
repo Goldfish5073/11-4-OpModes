@@ -9,6 +9,7 @@ import com.qualcomm.ftccommon.DbgLog;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.util.Range;
@@ -207,6 +208,23 @@ public class Hardware extends OpMode {
     void set_drive_power(double p_left_power, double p_right_power) {
         set_left_power(p_left_power);
         set_right_power(p_right_power);
+    }
+    void set_back_power(double p_left_power, double p_right_power){
+        if (v_motor_right_drive_back != null) {
+            v_motor_right_drive_back.setPower (p_right_power);
+        }
+        if (v_motor_left_drive_back != null) {
+            v_motor_left_drive_back.setPower (-p_left_power);
+        }
+    }
+
+    void set_front_power (double p_left_power, double p_right_power){
+        if (v_motor_right_drive != null) {
+            v_motor_right_drive.setPower (p_right_power);
+        }
+        if (v_motor_left_drive != null) {
+            v_motor_left_drive.setPower (p_left_power);
+        }
     }
 
     void set_right_power (double p_right_power) {

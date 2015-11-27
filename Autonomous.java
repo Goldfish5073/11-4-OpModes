@@ -5,9 +5,7 @@ import android.graphics.Color;
 import com.qualcomm.ftccommon.DbgLog;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.GyroSensor;
-
-
-
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 
 
 /**
@@ -30,6 +28,7 @@ public class Autonomous extends Hardware
 
     private ColorSensor sensorRGB;
     private GyroSensor sensorGyro;
+    private OpticalDistanceSensor sensorODS;
 
 
     //  hardwareMap.logDevices();
@@ -58,6 +57,7 @@ public class Autonomous extends Hardware
     GyroTurn gyroTurn1 = new GyroTurn();
     GyroTurn gyroTurn2 = new GyroTurn();
     GyroTurn gyroTurnM = new GyroTurn();
+    ODSTurn odsTurn1 = new ODSTurn();
     Pause pauseGyro = new Pause();
     Pause pause1 = new Pause();
     Pause pause2 = new Pause();
@@ -93,6 +93,13 @@ public class Autonomous extends Hardware
             DbgLog.msg(p_exception.getLocalizedMessage());
             sensorGyro = null;
         }
+        try {
+            sensorODS = hardwareMap.opticalDistanceSensor.get("ODS");
+        } catch (Exception p_exception) {
+            m_warning_message("ods sensor");
+            DbgLog.msg(p_exception.getLocalizedMessage());
+            sensorODS = null;
+        }
 
 
     ftcConfig.init(hardwareMap.appContext, this);
@@ -119,6 +126,7 @@ public class Autonomous extends Hardware
         gyroTurn1.reset();
         gyroTurn2.reset();
         gyroTurnM.reset();
+        odsTurn1.reset();
         pause1.reset();
         pause2.reset();
         pauseM.reset();
@@ -156,7 +164,12 @@ public class Autonomous extends Hardware
         }/*/
         if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_BEACON){
 
-            if (delay1.action()) {
+            if(odsTurn1.action(0.3f, 0.3f)){
+                step = "ods";
+            }
+
+
+            /*if (delay1.action()) {
                 step = "delay";
             } else if (drive1.action(0.5f, 30)) {
                 step = "drive";
@@ -488,11 +501,75 @@ public class Autonomous extends Hardware
                 state = 1;
             }
 
+
             return true;
         }
     }
 
+    private class ODSTurn {
+        int state;
+        long startTime;
+        double currentValue;
 
+        ODSTurn(){
+            state = -1;
+        }
+        void reset() {
+            state = -1;
+        }
+        boolean action (float speedFast, float speedSlow) {
+            speedFast = -speedFast;
+            speedSlow = -speedSlow;
+
+            if (state == 1) {
+                return false;
+            }
+
+            currentValue = (sensorODS.getLightDetected() * 100);
+
+            if (state == -1) {
+                reset_drive_encoders();
+                state = 3;
+                return true;
+            }
+            if (state == 3) {
+                if (have_drive_encoders_reset()) {
+                    state = 0;
+                    startTime = System.currentTimeMillis();
+                }
+                return true;
+            }
+
+            if (state == 2) {
+                // set_drive_power(0.0f, 0.0f);
+                //reset_drive_encoders();
+                if (have_drive_encoders_reset()) {
+                    state = 1;
+                }
+                return true;
+            }
+            if (state == 0) {
+                run_using_encoders();
+                if (!ftcConfig.param.colorIsRed) {
+                    set_back_power(-speedFast, speedSlow);
+                } else {
+                    set_back_power(speedSlow, -speedFast);
+                }
+
+
+            }
+            if (currentValue > 6 || System.currentTimeMillis() > (startTime + 30 * 1000)) {
+                state = 2;
+                reset_drive_encoders();
+                set_back_power(0.0f, 0.0f);
+            }
+
+            telemetry.addData("Desired Heading ODS", currentValue);
+            return true;
+        }
+
+
+    }
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //GYRO TURN
     private class GyroTurn {
