@@ -25,6 +25,7 @@ public class Autonomous extends Hardware
     private int v_state = 1;
 
     private String beaconPosition;
+    private String color;
 
     private ColorSensor sensorRGB;
     private GyroSensor sensorGyro;
@@ -43,29 +44,47 @@ public class Autonomous extends Hardware
     boolean teamColorBlue;
 
     ReadBeacon readBeacon1 = new ReadBeacon();
+
     MoveArm moveArm1 = new MoveArm();
+
     PressButton pressButton1 = new PressButton();
+
     Delay delay1 = new Delay();
     Delay delayM = new Delay();
+
     Turn turn1 = new Turn();
+
     Drive drive1 = new Drive();
     Drive drive2 = new Drive();
     Drive drive3 = new Drive();
+    Drive drive4 = new Drive();
+    Drive drive5 = new Drive();
+    Drive drive6 = new Drive();
     Drive driveM = new Drive();
     Drive driveM2 = new Drive();
     Drive driveMBack = new Drive();
+
+    Drive driveButton1 = new Drive();
+    Drive driveButton2 = new Drive();
+
+    ODSReverse odsReverse1 = new ODSReverse();
+
     GyroTurn gyroTurn1 = new GyroTurn();
     GyroTurn gyroTurn2 = new GyroTurn();
     GyroTurn gyroTurnM = new GyroTurn();
+
     ODSTurn odsTurn1 = new ODSTurn();
+
     Pause pauseGyro = new Pause();
     Pause pause1 = new Pause();
     Pause pause2 = new Pause();
     Pause pauseM = new Pause();
     Pause pauseM2 = new Pause();
-    Drive driveButton1 = new Drive();
-    Drive driveButton2 = new Drive();
+
     Stop stop1 = new Stop();
+
+    DropClimbers dropClimbers = new DropClimbers();
+    DriveStraight driveStraight1 = new DriveStraight();
 
     @Override public void start ()
     {
@@ -115,26 +134,41 @@ public class Autonomous extends Hardware
         delay1.reset();
 
         delayM.reset();
+
         turn1.reset();
+
         drive1.reset();
         drive2.reset();
         drive3.reset();
+        drive4.reset();
+        drive5.reset();
+        drive6.reset();
 
         driveM.reset();
         driveM2.reset();
         driveMBack.reset();
+
+        odsReverse1.reset();
+
         gyroTurn1.reset();
         gyroTurn2.reset();
         gyroTurnM.reset();
+
         odsTurn1.reset();
+
         pause1.reset();
         pause2.reset();
         pauseM.reset();
         pauseM2.reset();
+
         pauseGyro.reset();
+
         driveButton1.reset();
         driveButton2.reset();
 
+        dropClimbers.reset();
+
+        driveStraight1.reset();
 
 
 
@@ -152,6 +186,10 @@ public class Autonomous extends Hardware
         telemetry.addData("AutonType", ftcConfig.param.autonType);
         telemetry.addData("Step: ", step);
         telemetry.addData("Heading: ", heading);
+        telemetry.addData("ods",sensorODS.getLightDetected() * 100 );
+        telemetry.addData("beacon position", beaconPosition);
+        telemetry.addData("color", color);
+
 
 
        /* if (delay1.action()) {
@@ -164,9 +202,43 @@ public class Autonomous extends Hardware
         }/*/
         if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_BEACON){
 
-            if(odsTurn1.action(0.3f, 0.3f)){
-                step = "ods";
-            }
+            if (driveStraight1.action(0.2f, 80)) {
+                step = "drive straight 1";
+            } else if (gyroTurn1.action(0.2f, 315)){ // TODO make speed 0.3 for heavier robot
+                step = "gyro";
+            } else if (drive2.action(-0.3f, 20)){
+                step = "drive 2";
+            } else if(odsReverse1.action(0.3f)){
+                step = "ods reverse";
+            } else if (gyroTurn2.action(-0.2f, 90)){// TODO make speed 0.3 for heavier robot
+                step = "gyro 2";
+            } else if (pause1.action(5)) {
+                step = "pause";
+            }else if ( drive3.action(-0.3f, 20)){
+                step = "drive 3";
+            }else if (readBeacon1.action()) {
+                step = "read beacon";
+            } else if (drive4.action(0.3f, 8)){
+                step = "drive button 1";
+            } /*else if (moveArm1.action()){
+                step = "move arm";
+            } else if (drive5.action(-0.3f, 7)) { // goes forward to press button
+                step = "drive 5";
+            } else if (drive6.action(0.3f, 2)) { // goes backward to prepare to drop climbers
+                step = "drive 6";
+            } else if (dropClimbers.action()) {
+                step = "drop climbers";
+            }*/
+
+            //back up
+            //move arm
+            //go forward
+            //back up a little bit
+            //climbers
+
+
+
+
 
 
             /*if (delay1.action()) {
@@ -249,24 +321,26 @@ public class Autonomous extends Hardware
 
 
     }
-
+    // finds color of the beacon
     private class ReadBeacon
     {
-        String color;
         //0 = unknown
         //1 = blue
         //-1 = red
         int state;
+
         ReadBeacon()
         {
             state = -1;
             color = "unknown";
+            beaconPosition = "unknown";
         }
 
         void reset()
         {
             state = -1;
             color = "unknown";
+            beaconPosition = "unknown";
         }
 
         boolean action()
@@ -310,6 +384,7 @@ public class Autonomous extends Hardware
 
         }
     }
+    // moves arm so able to press beacon
     private class MoveArm {
         int state;
         MoveArm(){
@@ -331,6 +406,125 @@ public class Autonomous extends Hardware
             return true;
         }
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+//DRIVE STRAIGHT
+    private class DriveStraight {
+        int state;
+        String drift;
+        long startTime;
+
+        DriveStraight() {
+            state = -1;
+            drift = "none";
+        }
+        void reset() {
+            state = -1;
+            drift = "none";
+            reset_drive_encoders();
+            if(sensorGyro != null){
+                sensorGyro.resetZAxisIntegrator();
+            }
+        }
+        boolean action(float speed, int encoderCount) {
+            if (state == 1) {
+                return false;
+            }
+
+            telemetry.addData("17", "State: " + state);
+
+            xVal = sensorGyro.rawX();
+            yVal = sensorGyro.rawY();
+            zVal = sensorGyro.rawZ();
+
+            heading = sensorGyro.getHeading();
+
+            if (state == -1) {
+                reset_drive_encoders();
+                sensorGyro.resetZAxisIntegrator();
+                startTime = System.currentTimeMillis();
+                state = 3;
+                drift = "none";
+                return true;
+            }
+            if (state == 3) {
+                if (have_drive_encoders_reset() && (System.currentTimeMillis() > startTime + 2 * 1000) && heading == 0) {
+                    state = 0;
+                }
+                return true;
+            }
+            if (state == 2) {
+                if (have_drive_encoders_reset()) {
+                    state = 1;
+                }
+                return true;
+            }
+
+
+            //should be between 358 and 2
+
+            run_using_encoders();
+            if (drift.equals("none")){
+                if (heading < 180 && heading > 1) {
+                    drift = "right";
+                } else if (heading > 180 && heading < 359) {
+                    drift = "left";
+                }
+                set_drive_power(speed, speed);
+            } else if (drift.equals("right")) {
+                if (heading > 359 || heading < 10) {
+                    set_drive_power(speed + 0.1D, speed);
+                } else {
+                    drift = "none";
+                    set_drive_power(speed, speed);
+                }
+            } else if (drift.equals("left")) {
+                if (heading > 300 || heading < 1) {
+                    set_drive_power(speed, speed + 0.1D);
+                } else {
+                    drift = "none";
+                    set_drive_power(speed, speed);
+                }
+            }
+            telemetry.addData("Drift", drift);
+            //if it recognizes we need a correction - saves the heading, goes until it's at the opposite heading
+            //THEN straightens out
+
+            //use some cosine or sine function to scale the speed change to the degree off?
+            //cosine - speed * cos(difference)
+
+            if (have_drive_encoders_reached(encoderCount, encoderCount)) {
+                reset_drive_encoders();
+                sensorGyro.resetZAxisIntegrator();
+                set_drive_power(0.0f, 0.0f);
+                state = 2;
+            }
+
+            return true;
+        }
+
+    }
+
+
+    private class DropClimbers {
+        int state;
+        DropClimbers(){
+            state = -1;}
+        void reset(){
+            state = -1;
+        }
+        boolean action(){
+            if (state == 1){
+                return false;
+            }
+            if ( color != "unknown"){
+                climber_dropper_out();
+            }
+            state = 1;
+            return true;
+        }
+    }
+
 
 
     private class Delay {
@@ -456,6 +650,72 @@ public class Autonomous extends Hardware
 
             return true;
         }
+    }
+    private class ODSReverse {
+        int state;
+        int pass;
+        long startTime;
+        double currentValue;
+
+        ODSReverse(){
+            state = -1;
+            pass = -1;
+        }
+        void reset() {
+            state = -1;
+            pass = -1;
+        }
+        boolean action (float speed) {
+            speed = -speed;
+
+            if (state == 1) {
+                return false;
+            }
+
+            currentValue = (sensorODS.getLightDetected() * 100);
+
+            if (state == -1) {
+                reset_drive_encoders();
+                state = 3;
+                return true;
+            }
+            if (state == 3) {
+                if (have_drive_encoders_reset()) {
+                    state = 0;
+                    startTime = System.currentTimeMillis();
+                }
+                return true;
+            }
+
+            if (state == 2) {
+                // set_drive_power(0.0f, 0.0f);
+                //reset_drive_encoders();
+                if (have_drive_encoders_reset()) {
+                    state = 1;
+                }
+                return true;
+            }
+            if (state == 0) {
+                run_using_encoders();
+                set_drive_power(speed, speed);
+
+            }
+            if (currentValue >3 && pass == -1){
+                pass = 0;
+            }
+            else if (currentValue <3 && pass == 0){
+                pass = 1;
+            }
+            if ((pass == 1 && currentValue > 3.0) || System.currentTimeMillis() > (startTime + 30 * 1000)) {
+                state = 2;
+                reset_drive_encoders();
+                set_drive_power(0.0f, 0.0f);
+            }
+
+            return true;
+        }
+
+
     }
 
 
@@ -595,6 +855,12 @@ public class Autonomous extends Hardware
                 return false;
             }
 
+            xVal = sensorGyro.rawX();
+            yVal = sensorGyro.rawY();
+            zVal = sensorGyro.rawZ();
+
+            heading = sensorGyro.getHeading();
+
             if (state == -1){
                 //pauseGyro.reset(); //resets abort code
                 reset_drive_encoders();
@@ -604,7 +870,7 @@ public class Autonomous extends Hardware
             }
 
             if (state == 3) {
-                if (have_drive_encoders_reset()){
+                if (have_drive_encoders_reset() && heading == 0){
                     state = 0;
                     startTime = System.currentTimeMillis();
                 }
@@ -633,13 +899,9 @@ public class Autonomous extends Hardware
                     desiredHeading = 360 - desiredHeading;
                 }
 
-                xVal = sensorGyro.rawX();
-                yVal = sensorGyro.rawY();
-                zVal = sensorGyro.rawZ();
 
-                heading = sensorGyro.getHeading();
 
-                if (Math.abs(heading - desiredHeading) < 5 || System.currentTimeMillis() > (startTime + 5 * 1000)) {
+                if (Math.abs(heading - desiredHeading) < 5 || System.currentTimeMillis() > (startTime + 10 * 1000)) {
                     state = 2;
                     sensorGyro.resetZAxisIntegrator();
                     reset_drive_encoders();
