@@ -17,6 +17,8 @@ public class Autonomous extends Hardware
     String step;
     FtcConfig ftcConfig=new FtcConfig();
     float gyroTurnSpeed = 0.3f;
+    float greyValue = 5f;
+    float whiteLimit = 10f;
 
     public Autonomous()
     {
@@ -46,6 +48,7 @@ public class Autonomous extends Hardware
     ReadBeacon readBeacon1 = new ReadBeacon();
 
     MoveArm moveArm1 = new MoveArm();
+    MoveArm moveArm2 = new MoveArm();
 
     PressButton pressButton1 = new PressButton();
 
@@ -54,12 +57,16 @@ public class Autonomous extends Hardware
 
     Turn turn1 = new Turn();
 
+    //TODO - at some point make these drive names actually descriptive
+
     Drive drive1 = new Drive();
     Drive drive2 = new Drive();
     Drive drive3 = new Drive();
     Drive drive4 = new Drive();
     Drive drive5 = new Drive();
     Drive drive6 = new Drive();
+    Drive drive7 = new Drive();
+    Drive drive8 = new Drive();
     Drive driveM = new Drive();
     Drive driveM2 = new Drive();
     Drive driveMBack = new Drive();
@@ -78,6 +85,9 @@ public class Autonomous extends Hardware
     Pause pauseGyro = new Pause();
     Pause pause1 = new Pause();
     Pause pause2 = new Pause();
+    Pause pause3 = new Pause();
+    Pause pause4 = new Pause();
+    Pause pause5 = new Pause();
     Pause pauseM = new Pause();
     Pause pauseM2 = new Pause();
 
@@ -93,6 +103,7 @@ public class Autonomous extends Hardware
         super.start();
         reset_drive_encoders();
         step = "start";
+        beaconPosition = "unknown";
 
 
 
@@ -130,6 +141,7 @@ public class Autonomous extends Hardware
         readBeacon1.reset();
 
         moveArm1.reset();
+        moveArm2.reset();
         pressButton1.reset();
         delay1.reset();
 
@@ -143,6 +155,8 @@ public class Autonomous extends Hardware
         drive4.reset();
         drive5.reset();
         drive6.reset();
+        drive7.reset();
+        drive8.reset();
 
         driveM.reset();
         driveM2.reset();
@@ -158,6 +172,9 @@ public class Autonomous extends Hardware
 
         pause1.reset();
         pause2.reset();
+        pause3.reset();
+        pause4.reset();
+        pause5.reset();
         pauseM.reset();
         pauseM2.reset();
 
@@ -202,33 +219,47 @@ public class Autonomous extends Hardware
         }/*/
         if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_BEACON){
 
-            if (driveStraight1.action(0.2f, 80)) {
+            if (moveArm1.action()){
+                step = "move arm 1 to reset";
+            } else if (driveStraight1.action(0.3f, 86)) { //driveStraight automatically makes go backward
                 step = "drive straight 1";
-            } else if (gyroTurn1.action(0.2f, 315)){ // TODO make speed 0.3 for heavier robot
-                step = "gyro";
-            } else if (drive2.action(-0.3f, 20)){
-                step = "drive 2";
-            } else if(odsReverse1.action(0.3f)){
+            } else if (gyroTurn1.action(-0.3f, 320)){
+                step = "gyro to push away debris";
+            } else if (drive2.action(0.3f, 20)){
+                step = "drive to push away debris";
+            } else if(odsReverse1.action(-0.3f)){
                 step = "ods reverse";
-            } else if (gyroTurn2.action(-0.2f, 90)){// TODO make speed 0.3 for heavier robot
-                step = "gyro 2";
-            } else if (pause1.action(5)) {
-                step = "pause";
-            }else if ( drive3.action(-0.3f, 20)){
-                step = "drive 3";
+            }else if (drive3.action(0.3f, 3)) {
+                step = "drive forward a little bit to align";
+            }else if (pause1.action(3)){
+                step = "pause after drive 1";
+            }else if (gyroTurn2.action(0.3f, 85)){
+                step = "gyro to face beacon";
+            } else if (pause2.action(5)) {
+                step = "pause after turn 2";
+            }else if ( drive4.action(0.3f, 17)){
+                step = "drive forward to read beacon";
+            }else if (pause3.action(1)){
+                step = "pause to read beacon";
             }else if (readBeacon1.action()) {
                 step = "read beacon";
-            } else if (drive4.action(0.3f, 8)){
-                step = "drive button 1";
-            } /*else if (moveArm1.action()){
-                step = "move arm";
-            } else if (drive5.action(-0.3f, 7)) { // goes forward to press button
-                step = "drive 5";
-            } else if (drive6.action(0.3f, 2)) { // goes backward to prepare to drop climbers
-                step = "drive 6";
-            } else if (dropClimbers.action()) {
+            } else if (drive5.action(-0.3f, 8)){
+                step = "back up to move arm";
+            } else if (moveArm2.action()){
+                step = "move arm for beacon";
+            } else if (drive6.action(0.3f, 17)) { // goes forward to press button
+                step = "press the button!!!";
+            } else if (drive7.action(-0.3f, 3)) { // goes backward to prepare to drop climbers
+                step = "back up for climbers";
+            } else if (pause4.action(2)){
+                step = "pause before climbers";
+            }else if (dropClimbers.action()) { // TODO make it only when we know the color
                 step = "drop climbers";
-            }*/
+            } else if (pause5.action(1)) {
+                step = "lase pause";
+            } else if (drive8.action(-0.3f, 10)) {
+                step = "last drive back!";
+            }
 
             //back up
             //move arm
@@ -400,6 +431,9 @@ public class Autonomous extends Hardware
             if(!beaconPosition.equals("unknown")){
                 push_beacon(beaconPosition.equals("left"));
             }
+            else{
+                push_beacon_up();
+            }
 
             state = 1;
 
@@ -462,6 +496,8 @@ public class Autonomous extends Hardware
 
 
             //should be between 358 and 2
+            float rightSpeed = speed;
+            float leftSpeed = speed;
 
             run_using_encoders();
             if (drift.equals("none")){
@@ -473,19 +509,19 @@ public class Autonomous extends Hardware
                 set_drive_power(speed, speed);
             } else if (drift.equals("right")) {
                 if (heading > 359 || heading < 10) {
-                    set_drive_power(speed + 0.1D, speed);
+                    leftSpeed += 0.1D;
                 } else {
                     drift = "none";
-                    set_drive_power(speed, speed);
                 }
             } else if (drift.equals("left")) {
                 if (heading > 300 || heading < 1) {
-                    set_drive_power(speed, speed + 0.1D);
+                    rightSpeed += 0.1D;
                 } else {
                     drift = "none";
-                    set_drive_power(speed, speed);
                 }
             }
+            set_drive_power(-leftSpeed, -rightSpeed);
+
             telemetry.addData("Drift", drift);
             //if it recognizes we need a correction - saves the heading, goes until it's at the opposite heading
             //THEN straightens out
@@ -700,13 +736,13 @@ public class Autonomous extends Hardware
                 set_drive_power(speed, speed);
 
             }
-            if (currentValue >3 && pass == -1){
+            if (currentValue > greyValue && pass == -1){
                 pass = 0;
             }
-            else if (currentValue <3 && pass == 0){
+            else if (currentValue <greyValue && pass == 0){
                 pass = 1;
             }
-            if ((pass == 1 && currentValue > 3.0) || System.currentTimeMillis() > (startTime + 30 * 1000)) {
+            if (((pass == 1 || !ftcConfig.param.colorIsRed) && currentValue > greyValue) || System.currentTimeMillis() > (startTime + 30 * 1000)) {
                 state = 2;
                 reset_drive_encoders();
                 set_drive_power(0.0f, 0.0f);
@@ -818,7 +854,7 @@ public class Autonomous extends Hardware
 
 
             }
-            if (currentValue > 6 || System.currentTimeMillis() > (startTime + 30 * 1000)) {
+            if (currentValue > whiteLimit || System.currentTimeMillis() > (startTime + 30 * 1000)) {
                 state = 2;
                 reset_drive_encoders();
                 set_back_power(0.0f, 0.0f);

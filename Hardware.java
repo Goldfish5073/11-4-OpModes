@@ -286,9 +286,15 @@ public class Hardware extends OpMode {
     //PUSH BEACON
     void push_beacon (boolean isLeft) {
         if (isLeft) {
-            v_servo_push_beacon.setPosition (0.1D);
+            v_servo_push_beacon.setPosition (0.0D);
         } else {
-            v_servo_push_beacon.setPosition (0.9D);
+            v_servo_push_beacon.setPosition (1.0D);
+        }
+    }
+
+    void push_beacon_up(){
+        if (v_servo_push_beacon != null) {
+            v_servo_push_beacon.setPosition(0.5D);
         }
     }
 
