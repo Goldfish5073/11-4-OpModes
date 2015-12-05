@@ -46,6 +46,8 @@ public class TeleOp extends Hardware {
     left trigger = climber dropper out
     left bumper = climber dropper in
 
+    //TODO - make sure that all triggers are coded for GREATER THAN 0.5 - weird start error if not connected
+
     */
 
 
@@ -89,6 +91,7 @@ public class TeleOp extends Hardware {
         //////////////////////////////////////////////////////////////////////////////
         //ARM
         //FIRST
+        //SWITCH LEFT AND RIGHT FOR JIM -- and start controller as start x?
         if (Range.clip(gamepad2.left_stick_y, -1, 1) > 0.1) {
             set_first_arm_power(firstArmSpeed);
         } else if (Range.clip(gamepad2.left_stick_y, -1, 1) < -0.1) {
@@ -177,6 +180,26 @@ public class TeleOp extends Hardware {
                 ( "13"
                         , "Push Beacon Position: " + v_servo_push_beacon.getPosition();
                 );*/
+
+
+
+        //INVERSE KINEMATICS
+        /*
+
+        - track how far we've rotated
+            - encoder positions --> angle
+        - NO - track point in space at end of arm
+            - x and y coordinate
+        - calculate between
+            - figure out how far to move
+        - move toward it code (iterations, checking to see if there yet?)
+            - BUT - if we do this, what if delay causes Zach to move it too far?
+            - have it sense if Zach is moving up or moving sideways
+                based on that, do a motion to extend uniformly up or down/sideways
+
+
+
+         */
 
     } // loop
 } // Autonomous

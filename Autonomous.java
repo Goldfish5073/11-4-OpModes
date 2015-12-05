@@ -11,7 +11,6 @@ import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 /**
  * Created by Jachzach on 10/21/2015.
  */
-//TODO: register colorsensor in hardware, see why threw uncaught exception can't find hardware device "mr"
 public class Autonomous extends Hardware
 {
     String step;
@@ -43,62 +42,64 @@ public class Autonomous extends Hardware
     final float values[] = hsvValues;
     int xVal, yVal, zVal = 0;
     int heading = 0;
-    boolean teamColorBlue;
 
     ReadBeacon readBeacon1 = new ReadBeacon();
 
-    MoveArm moveArm1 = new MoveArm();
-    MoveArm moveArm2 = new MoveArm();
+    MoveArm moveArmForReset = new MoveArm();
+    MoveArm moveArmForBeacon = new MoveArm();
 
-    PressButton pressButton1 = new PressButton();
+    PressButton pressButton1 = new PressButton(); //NOT CURRENTLY IN USE
 
-    Delay delay1 = new Delay();
+    Delay delayBeacon = new Delay();
     Delay delayM = new Delay();
 
-    Turn turn1 = new Turn();
+    Turn turn1 = new Turn(); //NOT CURRENTLY IN USE
 
-    //TODO - at some point make these drive names actually descriptive
+    DropClimbers dropClimbers = new DropClimbers();
+    DriveStraight driveStraightToBeaconZone = new DriveStraight();
 
-    Drive drive1 = new Drive();
-    Drive drive2 = new Drive();
-    Drive drive3 = new Drive();
-    Drive drive4 = new Drive();
-    Drive drive5 = new Drive();
-    Drive drive6 = new Drive();
-    Drive drive7 = new Drive();
-    Drive drive8 = new Drive();
-    Drive driveM = new Drive();
-    Drive driveM2 = new Drive();
-    Drive driveMBack = new Drive();
 
-    Drive driveButton1 = new Drive();
-    Drive driveButton2 = new Drive();
 
-    ODSReverse odsReverse1 = new ODSReverse();
+    Drive driveToPushAwayDebris = new Drive();
+    Drive driveToAlignAfterODS = new Drive();
+    Drive driveToReadBeacon = new Drive();
+    Drive driveBackToMoveArm = new Drive();
+    Drive driveToPressButton = new Drive();
+    Drive driveBackForClimbers = new Drive();
+    Drive driveBackFinal = new Drive();
 
-    GyroTurn gyroTurn1 = new GyroTurn();
-    GyroTurn gyroTurn2 = new GyroTurn();
-    GyroTurn gyroTurnM = new GyroTurn();
+    Drive driveM_ToMountain = new Drive();
+    Drive driveM_OntoMountain = new Drive();
+    Drive driveM_BackToAlign = new Drive();
 
-    ODSTurn odsTurn1 = new ODSTurn();
+    Drive drive1 = new Drive(); //NOT CURRENTLY IN USE
+    Drive driveButton1 = new Drive(); //NOT CURRENTLY IN USE
+    Drive driveButton2 = new Drive(); //NOT CURRENTLY IN USE
+
+
+    ODSReverse odsReverseBeacon = new ODSReverse();
+
+    ODSTurn odsTurn1 = new ODSTurn(); //NOT CURRENTLY IN USE
+
+
+    GyroTurn gyroTurnToPushAwayDebris = new GyroTurn();
+    GyroTurn gyroTurnToFaceBeacon = new GyroTurn();
+    GyroTurn gyroTurnM_ToFaceMountain = new GyroTurn();
+
 
     Pause pauseGyro = new Pause();
-    Pause pause1 = new Pause();
-    Pause pause2 = new Pause();
-    Pause pause3 = new Pause();
-    Pause pause4 = new Pause();
-    Pause pause5 = new Pause();
+    Pause pauseAfterODSAlign = new Pause();
+    Pause pauseAfterFaceBeaconTurn = new Pause();
+    Pause pauseToReadBeacon = new Pause();
+    Pause pauseBeforeClimbers = new Pause();
+    Pause pauseToDropClimbers = new Pause();
+
     Pause pauseM = new Pause();
     Pause pauseM2 = new Pause();
 
-    Stop stop1 = new Stop();
-
-    DropClimbers dropClimbers = new DropClimbers();
-    DriveStraight driveStraight1 = new DriveStraight();
 
     @Override public void start ()
     {
-        //TODO - have phone ask red or blue during init and save as variable
         //Hardware start method
         super.start();
         reset_drive_encoders();
@@ -131,6 +132,8 @@ public class Autonomous extends Hardware
             sensorODS = null;
         }
 
+    update_telemetry();
+
 
     ftcConfig.init(hardwareMap.appContext, this);
 
@@ -140,41 +143,41 @@ public class Autonomous extends Hardware
 
         readBeacon1.reset();
 
-        moveArm1.reset();
-        moveArm2.reset();
+        moveArmForReset.reset();
+        moveArmForBeacon.reset();
         pressButton1.reset();
-        delay1.reset();
+        delayBeacon.reset();
 
         delayM.reset();
 
         turn1.reset();
 
         drive1.reset();
-        drive2.reset();
-        drive3.reset();
-        drive4.reset();
-        drive5.reset();
-        drive6.reset();
-        drive7.reset();
-        drive8.reset();
+        driveToPushAwayDebris.reset();
+        driveToAlignAfterODS.reset();
+        driveToReadBeacon.reset();
+        driveBackToMoveArm.reset();
+        driveToPressButton.reset();
+        driveBackForClimbers.reset();
+        driveBackFinal.reset();
 
-        driveM.reset();
-        driveM2.reset();
-        driveMBack.reset();
+        driveM_ToMountain.reset();
+        driveM_OntoMountain.reset();
+        driveM_BackToAlign.reset();
 
-        odsReverse1.reset();
+        odsReverseBeacon.reset();
 
-        gyroTurn1.reset();
-        gyroTurn2.reset();
-        gyroTurnM.reset();
+        gyroTurnToPushAwayDebris.reset();
+        gyroTurnToFaceBeacon.reset();
+        gyroTurnM_ToFaceMountain.reset();
 
         odsTurn1.reset();
 
-        pause1.reset();
-        pause2.reset();
-        pause3.reset();
-        pause4.reset();
-        pause5.reset();
+        pauseAfterODSAlign.reset();
+        pauseAfterFaceBeaconTurn.reset();
+        pauseToReadBeacon.reset();
+        pauseBeforeClimbers.reset();
+        pauseToDropClimbers.reset();
         pauseM.reset();
         pauseM2.reset();
 
@@ -185,11 +188,13 @@ public class Autonomous extends Hardware
 
         dropClimbers.reset();
 
-        driveStraight1.reset();
+        driveStraightToBeaconZone.reset();
 
 
 
     } // start
+
+
 
     @Override public void loop ()
 
@@ -218,46 +223,47 @@ public class Autonomous extends Hardware
         } else if (pressButton1.action()) {
         }/*/
         if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_BEACON){
-
-            if (moveArm1.action()){
+            if (moveArmForReset.action()){
                 step = "move arm 1 to reset";
-            } else if (driveStraight1.action(0.3f, 86)) { //driveStraight automatically makes go backward
+            } else if (delayBeacon.action()) {
+                step = "delay";
+            } else if (driveStraightToBeaconZone.action(0.3f, 87)) { //driveStraight automatically makes go backward
                 step = "drive straight 1";
-            } else if (gyroTurn1.action(-0.3f, 320)){
+            } else if (gyroTurnToPushAwayDebris.action(-0.3f, 320)){
                 step = "gyro to push away debris";
-            } else if (drive2.action(0.3f, 20)){
+            } else if (driveToPushAwayDebris.action(0.3f, 20)){
                 step = "drive to push away debris";
-            } else if(odsReverse1.action(-0.3f)){
+            } else if(odsReverseBeacon.action(-0.3f)){
                 step = "ods reverse";
-            }else if (drive3.action(0.3f, 3)) {
+            }else if (driveToAlignAfterODS.action(0.3f, getAlignDistance())) {
                 step = "drive forward a little bit to align";
-            }else if (pause1.action(3)){
+            }else if (pauseAfterODSAlign.action(1)){
                 step = "pause after drive 1";
-            }else if (gyroTurn2.action(0.3f, 85)){
+            }else if (gyroTurnToFaceBeacon.action(0.3f, 82)){
                 step = "gyro to face beacon";
-            } else if (pause2.action(5)) {
+            } else if (pauseAfterFaceBeaconTurn.action(1)) {
                 step = "pause after turn 2";
-            }else if ( drive4.action(0.3f, 17)){
+            }else if ( driveToReadBeacon.action(0.3f, 14)){
                 step = "drive forward to read beacon";
-            }else if (pause3.action(1)){
+            }else if (pauseToReadBeacon.action(1)){
                 step = "pause to read beacon";
             }else if (readBeacon1.action()) {
                 step = "read beacon";
-            } else if (drive5.action(-0.3f, 8)){
+            } else if (driveBackToMoveArm.action(-0.3f, 8)){
                 step = "back up to move arm";
-            } else if (moveArm2.action()){
+            } else if (moveArmForBeacon.action()){
                 step = "move arm for beacon";
-            } else if (drive6.action(0.3f, 17)) { // goes forward to press button
+            } else if (driveToPressButton.action(0.25f, 14)) { // goes forward to press button
                 step = "press the button!!!";
-            } else if (drive7.action(-0.3f, 3)) { // goes backward to prepare to drop climbers
+            } else if (driveBackForClimbers.action(-0.3f, 1)) { // goes backward to prepare to drop climbers
                 step = "back up for climbers";
-            } else if (pause4.action(2)){
+            } else if (pauseBeforeClimbers.action(2)){
                 step = "pause before climbers";
-            }else if (dropClimbers.action()) { // TODO make it only when we know the color
+            }else if (dropClimbers.action()) {
                 step = "drop climbers";
-            } else if (pause5.action(1)) {
-                step = "lase pause";
-            } else if (drive8.action(-0.3f, 10)) {
+            } else if (pauseToDropClimbers.action(3)) {
+                step = "last pause";
+            } else if (driveBackFinal.action(-0.3f, 10)) {
                 step = "last drive back!";
             }
 
@@ -304,18 +310,18 @@ public class Autonomous extends Hardware
         else if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_MOUNTAIN) {
             if (delayM.action()) {
                 step = "delayM";
-            } else if (driveM.action(-0.3f, 40)) {
+            } else if (driveM_ToMountain.action(-0.3f, 40)) {
                 step = "driveM";
             } else if (pauseM.action(1)) {
                 step = "pauseM";
-            } else if (driveMBack.action(0.3f, 5)) {
+            } else if (driveM_BackToAlign.action(0.3f, 5)) {
                 step = "pauseMBack";
             } else if (pauseM2.action(1)) {
                 step = "pauseM2";
-            }else if (gyroTurnM.action(gyroTurnSpeed, 80)) {
+            }else if (gyroTurnM_ToFaceMountain.action(gyroTurnSpeed, 80)) {
                 step = "gyroTurnM";
                 ///encoder in inches?
-            } else if (driveM2.action(-0.5f, 25)) {
+            } else if (driveM_OntoMountain.action(-0.5f, 25)) {
                 step = "drive M2";
             }
         }
@@ -610,14 +616,10 @@ public class Autonomous extends Hardware
         }
     }
 
-    private class Stop {
-        Stop () {
-        }
-        boolean action() {
-            reset_drive_encoders();
-            set_drive_power (0.0f, 0.0f);
-            return true;
-        }
+    private boolean Stop() {
+        reset_drive_encoders();
+        set_drive_power (0.0f, 0.0f);
+        return true;
     }
 
 
@@ -687,6 +689,17 @@ public class Autonomous extends Hardware
             return true;
         }
     }
+
+
+    public int getAlignDistance() {
+        if (ftcConfig.param.colorIsRed) {
+            return 3;
+        } else {
+            return 9;
+        }
+    }
+
+
     private class ODSReverse {
         int state;
         int pass;
@@ -706,6 +719,10 @@ public class Autonomous extends Hardware
 
             if (state == 1) {
                 return false;
+            }
+
+            if (state == 13) {
+                return Stop();
             }
 
             currentValue = (sensorODS.getLightDetected() * 100);
@@ -731,22 +748,26 @@ public class Autonomous extends Hardware
                 }
                 return true;
             }
+
             if (state == 0) {
                 run_using_encoders();
                 set_drive_power(speed, speed);
-
             }
+
             if (currentValue > greyValue && pass == -1){
                 pass = 0;
-            }
-            else if (currentValue <greyValue && pass == 0){
+            } else if (currentValue <greyValue && pass == 0){
                 pass = 1;
             }
-            if (((pass == 1 || !ftcConfig.param.colorIsRed) && currentValue > greyValue) || System.currentTimeMillis() > (startTime + 30 * 1000)) {
+
+            if (((pass == 1 || !ftcConfig.param.colorIsRed) && currentValue > greyValue)) {
                 state = 2;
                 reset_drive_encoders();
                 set_drive_power(0.0f, 0.0f);
+            } else if (System.currentTimeMillis() > (startTime + 5 * 1000)) {
+                state = 13;
             }
+
 
             return true;
         }
@@ -820,6 +841,9 @@ public class Autonomous extends Hardware
             if (state == 1) {
                 return false;
             }
+            if (state == 13) {
+                return Stop();
+            }
 
             currentValue = (sensorODS.getLightDetected() * 100);
 
@@ -854,10 +878,12 @@ public class Autonomous extends Hardware
 
 
             }
-            if (currentValue > whiteLimit || System.currentTimeMillis() > (startTime + 30 * 1000)) {
+            if (currentValue > whiteLimit) {
                 state = 2;
                 reset_drive_encoders();
                 set_back_power(0.0f, 0.0f);
+            } else if (System.currentTimeMillis() > (startTime + 10 * 1000)) {
+                state = 13;
             }
 
             telemetry.addData("Desired Heading ODS", currentValue);
@@ -871,6 +897,7 @@ public class Autonomous extends Hardware
     private class GyroTurn {
         int state;
         long startTime;
+
 
         GyroTurn() {
             state = -1;
@@ -906,7 +933,7 @@ public class Autonomous extends Hardware
             }
 
             if (state == 3) {
-                if (have_drive_encoders_reset() && heading == 0){
+                if (have_drive_encoders_reset() && (System.currentTimeMillis() > startTime + 2 * 1000) && heading == 0){
                     state = 0;
                     startTime = System.currentTimeMillis();
                 }
@@ -937,7 +964,7 @@ public class Autonomous extends Hardware
 
 
 
-                if (Math.abs(heading - desiredHeading) < 5 || System.currentTimeMillis() > (startTime + 10 * 1000)) {
+                if (Math.abs(heading - desiredHeading) < 3 || System.currentTimeMillis() > (startTime + 13 * 1000)) {
                     state = 2;
                     sensorGyro.resetZAxisIntegrator();
                     reset_drive_encoders();
