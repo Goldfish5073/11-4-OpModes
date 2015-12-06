@@ -56,6 +56,7 @@ public class Autonomous extends Hardware
     Turn turn1 = new Turn(); //NOT CURRENTLY IN USE
 
     DropClimbers dropClimbers = new DropClimbers();
+    DropClimbers dropClimbersIn = new DropClimbers();
     DriveStraight driveStraightToBeaconZone = new DriveStraight();
 
 
@@ -187,6 +188,7 @@ public class Autonomous extends Hardware
         driveButton2.reset();
 
         dropClimbers.reset();
+        dropClimbersIn.reset();
 
         driveStraightToBeaconZone.reset();
 
@@ -239,11 +241,11 @@ public class Autonomous extends Hardware
                 step = "drive forward a little bit to align";
             }else if (pauseAfterODSAlign.action(1)){
                 step = "pause after drive 1";
-            }else if (gyroTurnToFaceBeacon.action(0.3f, 82)){
+            }else if (gyroTurnToFaceBeacon.action(0.3f, 85)){
                 step = "gyro to face beacon";
             } else if (pauseAfterFaceBeaconTurn.action(1)) {
                 step = "pause after turn 2";
-            }else if ( driveToReadBeacon.action(0.3f, 14)){
+            }else if ( driveToReadBeacon.action(0.3f, 16)){
                 step = "drive forward to read beacon";
             }else if (pauseToReadBeacon.action(1)){
                 step = "pause to read beacon";
@@ -259,11 +261,11 @@ public class Autonomous extends Hardware
                 step = "back up for climbers";
             } else if (pauseBeforeClimbers.action(2)){
                 step = "pause before climbers";
-            }else if (dropClimbers.action()) {
+            }else if (dropClimbers.action(true)) {
                 step = "drop climbers";
             } else if (pauseToDropClimbers.action(3)) {
                 step = "last pause";
-            } else if (driveBackFinal.action(-0.3f, 10)) {
+            } else if (dropClimbersIn.action(false)) {
                 step = "last drive back!";
             }
 
@@ -555,12 +557,14 @@ public class Autonomous extends Hardware
         void reset(){
             state = -1;
         }
-        boolean action(){
+        boolean action(boolean deploy){
             if (state == 1){
                 return false;
             }
-            if ( color != "unknown"){
+            if ( color != "unknown" && deploy){
                 climber_dropper_out();
+            } else {
+                climber_dropper_in();
             }
             state = 1;
             return true;
@@ -964,7 +968,7 @@ public class Autonomous extends Hardware
 
 
 
-                if (Math.abs(heading - desiredHeading) < 3 || System.currentTimeMillis() > (startTime + 13 * 1000)) {
+                if (Math.abs(heading - desiredHeading) < 5 || System.currentTimeMillis() > (startTime + 13 * 1000)) {
                     state = 2;
                     sensorGyro.resetZAxisIntegrator();
                     reset_drive_encoders();

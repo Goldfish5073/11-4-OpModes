@@ -24,6 +24,7 @@ public class OpFtcConfig extends OpMode {
         telemetry.addData("ColorIsRed", Boolean.toString(ftcConfig.param.colorIsRed));
         telemetry.addData("DelayInSec", Integer.toString(ftcConfig.param.delayInSec));
         telemetry.addData("AutonType", ftcConfig.param.autonType);
+        telemetry.addData("SecondDriverIsZach", ftcConfig.param.secondDriverIsZach);
     }
 
 }

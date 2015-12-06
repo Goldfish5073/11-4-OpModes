@@ -19,6 +19,7 @@ public class FtcConfig {
         COLOR,
         DELAY,
         AUTON_TYPE,
+        SECOND_DRIVER,
         READY;
         private static ConfigStep[] vals = values();
         public ConfigStep next() { return vals[(this.ordinal()+1) % vals.length];}
@@ -29,6 +30,7 @@ public class FtcConfig {
         boolean colorIsRed;
         int delayInSec;
         AutonType autonType;
+        boolean secondDriverIsZach;
     }
 
     public enum AutonType {
@@ -71,6 +73,8 @@ public class FtcConfig {
                 param.colorIsRed = Boolean.valueOf(bufferedReader.readLine());
                 param.delayInSec = Integer.valueOf(bufferedReader.readLine());
                 String autonTypeString = bufferedReader.readLine();
+                param.secondDriverIsZach = Boolean.valueOf(bufferedReader.readLine());
+
                 for (AutonType a : AutonType.values()) {
                     if (a.name().equals(autonTypeString)) {
                         param.autonType = a;
@@ -86,6 +90,7 @@ public class FtcConfig {
             param.colorIsRed=true;
             param.delayInSec=0;
             param.autonType= AutonType.GO_FOR_BEACON;
+            param.secondDriverIsZach=true;
         }
 
         // setup initial toggle memory states for buttons used
@@ -192,6 +197,32 @@ public class FtcConfig {
             }
         }
 
+
+
+
+        currConfigStepCheck = ConfigStep.SECOND_DRIVER;
+        // message to driver about state of this config parameter
+        if (configStepState.ordinal() >= currConfigStepCheck.ordinal()) {
+            if (param.secondDriverIsZach) {
+                opMode.telemetry.addData("C" + currConfigStepCheck.ordinal(), "Driver: Zach");
+            } else {
+                opMode.telemetry.addData("C" + currConfigStepCheck.ordinal(), "Driver: Jim");
+            }
+        }
+        // configure this parameter
+        if (configStepState == currConfigStepCheck) {
+            opMode.telemetry.addData("C" + currConfigStepCheck.ordinal() + "A", "Push B for Zach, X for Jim");
+            if (opMode.gamepad1.x) {
+                param.secondDriverIsZach = false;
+            }
+            if (opMode.gamepad1.b) {
+                param.secondDriverIsZach = true;
+            }
+        }
+
+
+
+
         currConfigStepCheck = ConfigStep.READY;
         // message to driver about state of this config parameter
         if (configStepState.ordinal() >= currConfigStepCheck.ordinal() ) {
@@ -205,6 +236,7 @@ public class FtcConfig {
                 outputStreamWriter.write(Boolean.toString(param.colorIsRed)+"\n");
                 outputStreamWriter.write(Integer.toString(param.delayInSec)+"\n");
                 outputStreamWriter.write(param.autonType.name()+"\n");
+                outputStreamWriter.write(Boolean.toString(param.secondDriverIsZach) + "\n");
 
                 outputStreamWriter.close();
             }

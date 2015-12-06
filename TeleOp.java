@@ -20,6 +20,9 @@ public class TeleOp extends Hardware {
     int driveScale = driveSpeeds.length - 1;
     //firstArm is foremarm (top), secondArm is bicep (bottom)
 
+
+    FtcConfig ftcConfig=new FtcConfig();
+
     /////////////////////////////////////////////////////////////////////////////////////
     //CONTROLS
     /*
@@ -53,6 +56,10 @@ public class TeleOp extends Hardware {
 
     public TeleOp()
     {
+    }
+
+    @Override public void start () {
+        ftcConfig.init(hardwareMap.appContext, this);
     }
 
     @Override public void loop ()
@@ -92,22 +99,48 @@ public class TeleOp extends Hardware {
         //ARM
         //FIRST
         //SWITCH LEFT AND RIGHT FOR JIM -- and start controller as start x?
-        if (Range.clip(gamepad2.left_stick_y, -1, 1) > 0.1) {
-            set_first_arm_power(firstArmSpeed);
-        } else if (Range.clip(gamepad2.left_stick_y, -1, 1) < -0.1) {
-            set_first_arm_power(-firstArmSpeedBack);
+        if(ftcConfig.param.secondDriverIsZach) {
+            if (Range.clip(gamepad2.left_stick_y, -1, 1) > 0.1) {
+                set_first_arm_power(firstArmSpeed);
+            } else if (Range.clip(gamepad2.left_stick_y, -1, 1) < -0.1) {
+                set_first_arm_power(-firstArmSpeedBack);
+            } else {
+                set_first_arm_power(0.0);
+            }
+            //SECOND
+            if (Range.clip(-gamepad2.right_stick_y, -1, 1) > 0.1) {
+                set_second_arm_power(secondArmSpeed);
+            } else if (Range.clip(-gamepad2.right_stick_y, -1, 1) < -0.1) {
+                set_second_arm_power(-secondArmSpeedBack);
+            } else {
+                set_second_arm_power(0.0);
+            }
         } else {
-            set_first_arm_power (0.0);
-        }
-        //SECOND
-        if(Range.clip(-gamepad2.right_stick_y, -1, 1) > 0.1) {
-            set_second_arm_power(secondArmSpeed);
-        } else if (Range.clip(-gamepad2.right_stick_y, -1, 1) < -0.1) {
-            set_second_arm_power(-secondArmSpeedBack);
-        } else {
-            set_second_arm_power(0.0);
+            if (Range.clip(gamepad2.right_stick_y, -1, 1) > 0.1) {
+                set_first_arm_power(firstArmSpeed);
+            } else if (Range.clip(gamepad2.right_stick_y, -1, 1) < -0.1) {
+                set_first_arm_power(-firstArmSpeedBack);
+            } else {
+                set_first_arm_power(0.0);
+            }
+            //SECOND
+            if (Range.clip(-gamepad2.left_stick_y, -1, 1) > 0.1) {
+                set_second_arm_power(secondArmSpeed);
+            } else if (Range.clip(-gamepad2.left_stick_y, -1, 1) < -0.1) {
+                set_second_arm_power(-secondArmSpeedBack);
+            } else {
+                set_second_arm_power(0.0);
+            }
         }
 
+
+        //////////////////////////////////////////////////////////////////////////////
+        //RATCHET
+        if (gamepad1.y) {
+            ratchet_deploy();
+        } else if (gamepad1.x) {
+            ratchet_release();
+        }
 
         //////////////////////////////////////////////////////////////////////////////
         //CLAW

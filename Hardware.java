@@ -27,6 +27,9 @@ public class Hardware extends OpMode {
 
     double hook_in = 0.1D;
 
+    double ratchet_deployed = 0.6D;
+    double ratchet_released = 0.0D;
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //HARDWARE INITIALIZATION
@@ -60,6 +63,8 @@ public class Hardware extends OpMode {
     public Servo v_tab_slapper;
 
     public Servo v_climber_dropper;
+
+    public Servo v_ratchet;
 
 
     public Hardware() {
@@ -196,6 +201,14 @@ public class Hardware extends OpMode {
             DbgLog.msg (p_exception.getLocalizedMessage ());
             v_climber_dropper = null;
         }
+        try {
+            v_ratchet = hardwareMap.servo.get("ratchet");
+            v_ratchet.setPosition(ratchet_released);
+        } catch (Exception p_exception) {
+            m_warning_message("ratchet");
+            DbgLog.msg(p_exception.getLocalizedMessage());
+            v_ratchet = null;
+        }
 
 
         reset_drive_encoders ();
@@ -288,7 +301,7 @@ public class Hardware extends OpMode {
         if (isLeft) {
             v_servo_push_beacon.setPosition (0.0D);
         } else {
-            v_servo_push_beacon.setPosition (1.0D);
+            v_servo_push_beacon.setPosition(1.0D);
         }
     }
 
@@ -326,6 +339,19 @@ public class Hardware extends OpMode {
         }
     }
 
+    /////////////////////////////////////////////////////////////////////////////
+    //RATCHET
+    void ratchet_deploy() {
+        if (v_ratchet != null && v_ratchet.getPosition() < ratchet_deployed) {
+            v_ratchet.setPosition(ratchet_deployed);
+        }
+    }
+    void ratchet_release() {
+        if(v_ratchet != null && v_ratchet.getPosition() > ratchet_released) {
+            v_ratchet.setPosition(ratchet_released);
+        }
+    }
+
 
     /////////////////////////////////////////////////////////////////////////////
     //CLIMBER DROPPER
@@ -339,6 +365,8 @@ public class Hardware extends OpMode {
             v_climber_dropper.setPosition(climber_dropper_out);
         }
     }
+
+
 
 
 
