@@ -68,7 +68,7 @@ public class TeleOp extends Hardware {
         //////////////////////////////////////////////////////////////////////////////
         //DRIVE
         //DRIVE SCALE
-        if (gamepad1.right_trigger > 0.1 && driveScale < driveSpeeds.length - 1) {
+        if (gamepad1.right_trigger > 0.51 && driveScale < driveSpeeds.length - 1) {
             driveScale++;
         } else if (gamepad1.right_bumper && driveScale > 0) {
             driveScale--;
@@ -146,7 +146,7 @@ public class TeleOp extends Hardware {
         //CLAW
         if (gamepad1.left_bumper) {
             set_claw_power(clawSpeed);
-        }else if (gamepad1.left_trigger > 0.05) {
+        }else if (gamepad1.left_trigger > 0.51) {
             set_claw_power(-clawSpeed);
         } else {
             set_claw_power(0.0);
@@ -169,7 +169,7 @@ public class TeleOp extends Hardware {
         //TODO: make this less sensitive? use a current and a past state, have equal
         if (gamepad2.right_bumper){
             hook_in();
-        } else if (gamepad2.right_trigger > 0.1){
+        } else if (gamepad2.right_trigger > 0.51){
             hook_out();
         }
 
@@ -196,7 +196,7 @@ public class TeleOp extends Hardware {
 
         /////////////////////////////////////////////////////////////////////////////
         //CLIMBER DROPPER
-        if(gamepad2.left_trigger > 0.1) {
+        if(gamepad2.left_trigger > 0.51) {
             climber_dropper_out();
         } else if (gamepad2.left_bumper) {
             climber_dropper_in();
