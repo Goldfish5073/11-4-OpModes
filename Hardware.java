@@ -28,7 +28,7 @@ public class Hardware extends OpMode {
     double hook_in = 0.1D;
 
     double ratchet_deployed = 0.6D;
-    double ratchet_released = 0.0D;
+    double ratchet_released = 0.2D;
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -329,13 +329,17 @@ public class Hardware extends OpMode {
     //////////////////////////////////////////////////////////////////////////////
     // TAB SLAPPER
     void tab_slapper_out (){
-        if (v_tab_slapper.getPosition() > tab_slapper_out) {
-            v_tab_slapper.setPosition(tab_slapper_out);
+        if(v_tab_slapper != null) {
+            if (v_tab_slapper.getPosition() > tab_slapper_out) {
+                v_tab_slapper.setPosition(tab_slapper_out);
+            }
         }
     }
     void tab_slapper_in(){
-        if (v_tab_slapper.getPosition() < tab_slapper_in) {
-            v_tab_slapper.setPosition(tab_slapper_in);
+        if (v_tab_slapper != null) {
+            if (v_tab_slapper.getPosition() < tab_slapper_in) {
+                v_tab_slapper.setPosition(tab_slapper_in);
+            }
         }
     }
 

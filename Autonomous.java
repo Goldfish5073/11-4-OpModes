@@ -54,7 +54,7 @@ public class Autonomous extends Hardware
     Delay delayBeacon = new Delay();
     Delay delayM = new Delay();
 
-    Turn turn1 = new Turn(); //NOT CURRENTLY IN USE
+    Turn turnToHitBeacon = new Turn(); //NOT CURRENTLY IN USE
 
     DropClimbers dropClimbers = new DropClimbers();
     DropClimbers dropClimbersIn = new DropClimbers();
@@ -70,6 +70,8 @@ public class Autonomous extends Hardware
     Drive driveToPressButton = new Drive();
     Drive driveBackForClimbers = new Drive();
     Drive driveBackFinal = new Drive();
+    Drive driveToDoubleCheckButton = new Drive();
+
 
     Drive driveM_ToMountain = new Drive();
     Drive driveM_OntoMountain = new Drive();
@@ -135,10 +137,10 @@ public class Autonomous extends Hardware
             sensorODS = null;
         }
 
-    update_telemetry();
+        update_telemetry();
 
 
-    ftcConfig.init(hardwareMap.appContext, this);
+        ftcConfig.init(hardwareMap.appContext, this);
 
     // sensorRGB = hardwareMap.colorSensor.get("mr");
         sensorGyro.calibrate();
@@ -155,7 +157,7 @@ public class Autonomous extends Hardware
 
         delayM.reset();
 
-        turn1.reset();
+        turnToHitBeacon.reset();
         toBeacon.reset();
         drive1.reset();
         driveToPushAwayDebris.reset();
@@ -164,6 +166,7 @@ public class Autonomous extends Hardware
         driveBackToMoveArm.reset();
         driveToPressButton.reset();
         driveBackForClimbers.reset();
+        driveToDoubleCheckButton.reset();
         driveBackFinal.reset();
 
         driveM_ToMountain.reset();
@@ -255,7 +258,9 @@ public class Autonomous extends Hardware
                 step = "move arm for beacon";
             } else if (driveToPressButton.action(0.25f, 14)) {
                 step = "press the button!!!";
-            } else if (driveBackForClimbers.action(-0.3f, 1)) {
+            } /*else if (turnToHitBeacon.action(-1.0f, 3)) {
+                step = "turn to hit beacon";
+            } */else if (driveBackForClimbers.action(-0.3f, 1)) {
                 step = "back up for climbers";
             } else if (pauseBeforeClimbers.action(2)){
                 step = "pause before climbers";
@@ -957,47 +962,67 @@ public class Autonomous extends Hardware
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // not sure needed
-private class Turn {
-    int state;
 
-    Turn() {
-        state = -1;
-        run_using_encoders();
-    }
+    private class Turn {
+        int state;
+        long startTime;
 
-    void reset() {
-        state = -1;
-    }
+        Turn() {
+            state = -1;
+            run_using_encoders();
+        }
 
-    boolean action(float speed, int encoderCount) {
-        speed = -speed; //robot is backwards
+        void reset() {
+            state = -1;
+        }
 
-        if (state == -1){
-            if (ftcConfig.param.colorIsRed){
-                set_drive_power(speed, -speed);
-                state = 0;
+        boolean action(float speed, int sec) {
+            speed = -speed; //robot is backwards
+
+            if (state == 1) {
+                return false;
             }
-            else{
-                set_drive_power(-speed, speed);
-                state = 0;
+
+            if (state == -1){
+                reset_drive_encoders();
+                state = -2;
+                return true;
             }
+
+            if (state == -2) {
+                if (have_drive_encoders_reset()){
+                    state = 0;
+                    startTime = System.currentTimeMillis();
+                }
+                return true;
+            }
+
+            if (state == 0) {
+                run_using_encoders();
+
+                if (beaconPosition.equals("left")) {
+                    set_drive_power(0, -speed);
+                } else if (beaconPosition.equals("right")) {
+                    set_drive_power(-speed, 0);
+                }
+
+                if (System.currentTimeMillis() > startTime + (sec * 1000)) {
+                    reset_drive_encoders ();
+                    set_drive_power (0.0f, 0.0f);
+                    state = 2;
+                    return true;
+                }
+            }
+
+            if (state == 2) {
+                if(have_drive_encoders_reset()) {
+                    state = 1;
+                }
+            }
+
+            return true;
         }
-
-        if (state == 1) {
-            return false;
-        }
-
-        state = 0;
-
-        if (have_drive_encoders_reached (encoderCount, encoderCount)) {
-            reset_drive_encoders ();
-            set_drive_power (0.0f, 0.0f);
-            state = 1;
-        }
-
-        return true;
     }
-}
 
     void drive (float speed, int encoderCount)
     {
