@@ -20,6 +20,7 @@ public class FtcConfig {
         DELAY,
         AUTON_TYPE,
         SECOND_DRIVER,
+        START_POS,
         READY;
         private static ConfigStep[] vals = values();
         public ConfigStep next() { return vals[(this.ordinal()+1) % vals.length];}
@@ -31,6 +32,7 @@ public class FtcConfig {
         int delayInSec;
         AutonType autonType;
         boolean secondDriverIsZach;
+        boolean startNearMount;
     }
 
     public enum AutonType {
@@ -74,6 +76,8 @@ public class FtcConfig {
                 param.delayInSec = Integer.valueOf(bufferedReader.readLine());
                 String autonTypeString = bufferedReader.readLine();
                 param.secondDriverIsZach = Boolean.valueOf(bufferedReader.readLine());
+                param.startNearMount = Boolean.valueOf(bufferedReader.readLine());
+
 
                 for (AutonType a : AutonType.values()) {
                     if (a.name().equals(autonTypeString)) {
@@ -91,6 +95,7 @@ public class FtcConfig {
             param.delayInSec=0;
             param.autonType= AutonType.GO_FOR_BEACON;
             param.secondDriverIsZach=true;
+            param.startNearMount = true;
         }
 
         // setup initial toggle memory states for buttons used
@@ -220,6 +225,26 @@ public class FtcConfig {
             }
         }
 
+        currConfigStepCheck = ConfigStep.START_POS;
+        // message to driver about state of this config parameter
+        if (configStepState.ordinal() >= currConfigStepCheck.ordinal()) {
+            if (param.startNearMount) {
+                opMode.telemetry.addData("C" + currConfigStepCheck.ordinal(), "Start: nearMount");
+            } else {
+                opMode.telemetry.addData("C" + currConfigStepCheck.ordinal(), "Start: far");
+            }
+        }
+        // configure this parameter
+        if (configStepState == currConfigStepCheck) {
+            opMode.telemetry.addData("C" + currConfigStepCheck.ordinal() + "A", "Push B for nearMount, X for far");
+            if (opMode.gamepad1.x) {
+                param.startNearMount = false;
+            }
+            if (opMode.gamepad1.b) {
+                param.startNearMount = true;
+            }
+        }
+
 
 
 
@@ -237,6 +262,7 @@ public class FtcConfig {
                 outputStreamWriter.write(Integer.toString(param.delayInSec)+"\n");
                 outputStreamWriter.write(param.autonType.name()+"\n");
                 outputStreamWriter.write(Boolean.toString(param.secondDriverIsZach) + "\n");
+                outputStreamWriter.write(Boolean.toString(param.startNearMount) + "\n");
 
                 outputStreamWriter.close();
             }

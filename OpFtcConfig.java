@@ -25,6 +25,7 @@ public class OpFtcConfig extends OpMode {
         telemetry.addData("DelayInSec", Integer.toString(ftcConfig.param.delayInSec));
         telemetry.addData("AutonType", ftcConfig.param.autonType);
         telemetry.addData("SecondDriverIsZach", ftcConfig.param.secondDriverIsZach);
+        telemetry.addData("StartNearMount", ftcConfig.param.startNearMount);
     }
 
 }

@@ -246,21 +246,11 @@ public class Autonomous extends Hardware
                 step = "pause after turn 2";
             }else if ( driveToReadBeacon.action(0.3f, 18)){ //OUT
                 step = "drive forward to read beacon";
-            }
-
-            else if (pauseToReadBeacon.action(1)){
+            } else if (pauseToReadBeacon.action(1)){
                 step = "pause to read beacon";
             }else if (readBeacon1.action()) {
                 step = "read beacon";
-            } else if (driveBackToMoveArm.action(-0.3f, 8)){
-                step = "back up to move arm";
-            } else if (moveArmForBeacon.action(beaconPosition)){
-                step = "move arm for beacon";
-            } else if (driveToPressButton.action(0.25f, 14)) {
-                step = "press the button!!!";
-            } /*else if (turnToHitBeacon.action(-1.0f, 3)) {
-                step = "turn to hit beacon";
-            } */else if (driveBackForClimbers.action(-0.3f, 1)) {
+            } else if (driveBackForClimbers.action(-0.3f, 1)) {
                 step = "back up for climbers";
             } else if (pauseBeforeClimbers.action(2)){
                 step = "pause before climbers";
@@ -270,7 +260,16 @@ public class Autonomous extends Hardware
                 step = "last pause";
             } else if (dropClimbersIn.action(false)) {
                 step = "last drive back!";
-            } else if (moveArmForTeleOp.action("left")) {
+            }else if (driveBackToMoveArm.action(-0.3f, 8)){
+                step = "back up to move arm";
+            } else if (moveArmForBeacon.action(beaconPosition)){
+                step = "move arm for beacon";
+            } else if (!color.equals("unknown") && driveToPressButton.action(0.25f, 14)) {
+                step = "press the button!!!";
+            } /*else if (turnToHitBeacon.action(-1.0f, 3)) {
+                step = "turn to hit beacon";
+            } */
+            else if (moveArmForTeleOp.action("left")) {
                 step = "move arm for tele op";
             }
         }

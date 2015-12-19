@@ -61,6 +61,7 @@ public class FtcOpModeRegister implements OpModeRegister {
     manager.register("OpFtcConfig", OpFtcConfig.class);
     manager.register("NullOp", NullOp.class);
     manager.register("ODS Test", EOPD_TEST.class);
+    manager.register("ColorSensorTester", ColorSensorTester.class);
 
 
     //manager.register("ColorSensorTester", ColorSensorTester.class);

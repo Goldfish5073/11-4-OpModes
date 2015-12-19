@@ -29,6 +29,8 @@ public class Hardware extends OpMode {
 
     double ratchet_deployed = 0.6D;
     double ratchet_released = 0.2D;
+    double random_initial = 0.0D;
+    double random_final = 0.5D;
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,6 +67,7 @@ public class Hardware extends OpMode {
     public Servo v_climber_dropper;
 
     public Servo v_ratchet;
+
 
 
     public Hardware() {
@@ -211,6 +214,7 @@ public class Hardware extends OpMode {
         }
 
 
+
         reset_drive_encoders ();
         run_using_encoders ();
     } // init
@@ -315,12 +319,13 @@ public class Hardware extends OpMode {
     //////////////////////////////////////////////////////////////////////////////
     //HOOK
     void hook_out (){
-        if (v_hook.getPosition() < 0.9) {
-            v_hook.setPosition(v_hook.getPosition() + .05);
+        if (v_hook != null) {
+            if (v_hook.getPosition() < 0.9D){}
+                v_hook.setPosition(v_hook.getPosition() + .05);
         }
     }
     void hook_in (){
-        if (v_hook.getPosition() > 0.25) {
+        if (v_hook.getPosition() > hook_in) {
             v_hook.setPosition (v_hook.getPosition() - .05);
         }
     }
