@@ -4,6 +4,7 @@ import android.graphics.Color;
 
 import com.qualcomm.ftccommon.DbgLog;
 import com.qualcomm.robotcore.hardware.ColorSensor;
+//import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 
@@ -17,7 +18,8 @@ public class Autonomous extends Hardware
     FtcConfig ftcConfig=new FtcConfig();
     float gyroTurnSpeed = 0.3f;
     float grey = 5f;
-    float white = 10f;
+    float white = 3f;
+
 
     public Autonomous()
     {
@@ -26,11 +28,16 @@ public class Autonomous extends Hardware
     private int v_state = 1;
 
     private String beaconPosition;
-    private String color;
+    private String color = "";
 
-    private ColorSensor sensorRGB;
+    //private ColorSensor sensorRGB;
+    private ColorSensor firstRGB;
+    private ColorSensor secondRGB;
+   // private DeviceInterfaceModule cdim;
     private GyroSensor sensorGyro;
     private OpticalDistanceSensor sensorODS;
+    float hsvValuesFirst[] = {0F,0F,0F};
+    float hsvValuesSecond[] = {0F,0F,0F};
 
 
     //  hardwareMap.logDevices();
@@ -43,7 +50,7 @@ public class Autonomous extends Hardware
     int xVal, yVal, zVal = 0;
     int heading = 0;
 
-    ReadBeacon readBeacon1 = new ReadBeacon();
+    //ReadBeacon readBeacon1 = new ReadBeacon();
 
     MoveArm moveArmForReset = new MoveArm();
     MoveArm moveArmForBeacon = new MoveArm();
@@ -58,8 +65,12 @@ public class Autonomous extends Hardware
 
     DropClimbers dropClimbers = new DropClimbers();
     DropClimbers dropClimbersIn = new DropClimbers();
+
+    DriveStraight initialDriveStraight = new DriveStraight();
     DriveStraight driveStraightToBeaconZone = new DriveStraight();
-    ToWhiteLine toBeacon = new ToWhiteLine();
+    DriveStraight driveFarther = new DriveStraight();
+    DriveStraightColor initialDriveStraightColor = new DriveStraightColor();
+    //ToWhiteLine toBeacon = new ToWhiteLine();
 
 
 
@@ -83,6 +94,7 @@ public class Autonomous extends Hardware
 
 
     ODSReverse odsReverseBeacon = new ODSReverse();
+    ColorReverse colorReverse = new ColorReverse();
 
     ODSTurn odsTurn1 = new ODSTurn(); //NOT CURRENTLY IN USE
 
@@ -90,6 +102,7 @@ public class Autonomous extends Hardware
     GyroTurn gyroTurnToPushAwayDebris = new GyroTurn();
     GyroTurn gyroTurnToFaceBeacon = new GyroTurn();
     GyroTurn gyroTurnM_ToFaceMountain = new GyroTurn();
+    GyroTurn initialGyroTurn = new GyroTurn();
 
 
     Pause pauseGyro = new Pause();
@@ -103,8 +116,7 @@ public class Autonomous extends Hardware
     Pause pauseM2 = new Pause();
 
 
-    @Override public void start ()
-    {
+    @Override public void start () {
         //Hardware start method
         super.start();
         reset_drive_encoders();
@@ -113,13 +125,44 @@ public class Autonomous extends Hardware
 
 
 
-        try {
-            sensorRGB = hardwareMap.colorSensor.get("mr");
+      /*  try {
+            sensorRGB = hardwareMap.colorSensor.get("mr0");
         } catch (Exception p_exception) {
             m_warning_message("color sensor");
             DbgLog.msg(p_exception.getLocalizedMessage());
             sensorRGB = null;
+        }*/
+
+        try {
+            firstRGB = hardwareMap.colorSensor.get("mr");
+            firstRGB.setI2cAddress(0x5c);
+            firstRGB.enableLed(false);
+        } catch (Exception p_exception) {
+            m_warning_message("color sensor");
+            DbgLog.msg(p_exception.getLocalizedMessage());
+            firstRGB = null;
         }
+
+        try {
+
+            secondRGB = hardwareMap.colorSensor.get("mr2");
+            secondRGB.setI2cAddress(0x4c);
+
+            secondRGB.enableLed(false);
+
+        } catch (Exception p_exception) {
+            m_warning_message("color sensor");
+            DbgLog.msg(p_exception.getLocalizedMessage());
+            secondRGB = null;
+        }
+
+       /* try {
+            cdim = hardwareMap.deviceInterfaceModule.get("sensors");
+        } catch (Exception p_exception) {
+            m_warning_message("sensors");
+            DbgLog.msg(p_exception.getLocalizedMessage());
+            cdim = null;
+        }*/
 
 
         try {
@@ -142,11 +185,11 @@ public class Autonomous extends Hardware
 
         ftcConfig.init(hardwareMap.appContext, this);
 
-    // sensorRGB = hardwareMap.colorSensor.get("mr");
+        // //sensorRGB = hardwareMap.colorSensor.get("mr");
         sensorGyro.calibrate();
 
 
-        readBeacon1.reset();
+        // readBeacon1.reset();
 
         moveArmForReset.reset();
         moveArmForBeacon.reset();
@@ -158,7 +201,7 @@ public class Autonomous extends Hardware
         delayM.reset();
 
         turnToHitBeacon.reset();
-        toBeacon.reset();
+        //toBeacon.reset();
         drive1.reset();
         driveToPushAwayDebris.reset();
         driveToAlignAfterODS.reset();
@@ -174,10 +217,12 @@ public class Autonomous extends Hardware
         driveM_BackToAlign.reset();
 
         odsReverseBeacon.reset();
+        colorReverse.reset();
 
         gyroTurnToPushAwayDebris.reset();
         gyroTurnToFaceBeacon.reset();
         gyroTurnM_ToFaceMountain.reset();
+        initialGyroTurn.reset();
 
         odsTurn1.reset();
 
@@ -198,6 +243,9 @@ public class Autonomous extends Hardware
         dropClimbersIn.reset();
 
         driveStraightToBeaconZone.reset();
+        initialDriveStraight.reset();
+        driveFarther.reset();
+        initialDriveStraightColor.reset();
 
 
 
@@ -212,17 +260,36 @@ public class Autonomous extends Hardware
         telemetry.addData("ColorIsRed", Boolean.toString(ftcConfig.param.colorIsRed));
         telemetry.addData("DelayInSec", Integer.toString(ftcConfig.param.delayInSec));
         telemetry.addData("AutonType", ftcConfig.param.autonType);
+
         telemetry.addData("Step: ", step);
         telemetry.addData("Heading: ", heading);
-        telemetry.addData("ods",sensorODS.getLightDetected() * 100 );
+        // telemetry.addData("ods",sensorODS.getLightDetected() * 100 );
         telemetry.addData("beacon position", beaconPosition);
-        telemetry.addData("color", color);
+       // telemetry.addData("color", color);
+
 
         if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_BEACON){
             if (moveArmForReset.action(beaconPosition)){
                 step = "move arm 1 to reset";
-            } else if (delayBeacon.action()) {
+            }/* else if (delayBeacon.action()) {
                 step = "delay";
+            } else if (initialDriveStraight.action(0.3f,12)){
+                step = "drive";
+            } else if (initialGyroTurn.action(0.3f,45)){
+                step = "first turn";
+            } else if (initialDriveStraightColor.action(0.3f, 87)) {
+                step = "drive straight color 1";
+            } else if (driveFarther.action(0.3f,12)){
+                step = "drive straight a little";
+            }else if (gyroTurnToPushAwayDebris.action(-0.3f, 320)){
+                step = "gyro to push away debris";
+            } else if (driveToPushAwayDebris.action(0.3f, 20)){
+                step = "drive to push away debris";
+            } else if (colorReverse.action(-0.3f)){
+                step = "color reverse";
+            }
+
+            /*
             } else if (driveStraightToBeaconZone.action(0.3f, 87)) { //driveStraight automatically makes go backward
                 step = "drive straight 1";
             } else if (gyroTurnToPushAwayDebris.action(-0.3f, 320)){
@@ -235,6 +302,7 @@ public class Autonomous extends Hardware
             else if (toBeacon.action(0.2f, 6)) {
                 step = "to Beacon";
             } */
+                /*
 
             else if (driveToAlignAfterODS.action(0.3f, getAlignDistance())) { //OUT
                 step = "drive forward a little bit to align";
@@ -268,10 +336,10 @@ public class Autonomous extends Hardware
                 step = "press the button!!!";
             } /*else if (turnToHitBeacon.action(-1.0f, 3)) {
                 step = "turn to hit beacon";
-            } */
+            }
             else if (moveArmForTeleOp.action("left")) {
                 step = "move arm for tele op";
-            }
+            }*/
         }
         else if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_MOUNTAIN) {
             if (delayM.action()) {
@@ -289,12 +357,15 @@ public class Autonomous extends Hardware
             } else if (driveM_OntoMountain.action(-0.5f, 25)) {
                 step = "drive M2";
             }
-        }
 
+        }
         color();
         update_telemetry();
+    }
 
-    } // loop
+
+
+ // loop
 
 
     /*
@@ -304,7 +375,7 @@ public class Autonomous extends Hardware
 
      */
 
-    public class ToWhiteLine {
+    /*public class ToWhiteLine {
         int state;
         long startTime;
         double currentValue;
@@ -366,7 +437,7 @@ public class Autonomous extends Hardware
                 color = "red";
             } else {
                 color = "unknown";
-            }*/
+            }
 
 
                 if ((System.currentTimeMillis() > startTime + sec * 1000) || hsvValues[0] > 50 || sensorRGB.red() > 0) {
@@ -385,7 +456,7 @@ public class Autonomous extends Hardware
 
             return true;
         }
-    }
+    }*/
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -393,7 +464,25 @@ public class Autonomous extends Hardware
 
     public void color()
     {
+        secondRGB.enableLed(true);
 
+        Color.RGBToHSV(secondRGB.red() * 8, secondRGB.green() * 8, secondRGB.blue() * 8, hsvValuesSecond);
+        telemetry.addData("ClearLeft", secondRGB.alpha());
+        telemetry.addData("RedLeft  ", secondRGB.red());
+        telemetry.addData("GreenLeft", secondRGB.green());
+        telemetry.addData("BlueLeft ", secondRGB.blue());
+        telemetry.addData("HueLeft", hsvValuesSecond[0]);
+
+        firstRGB.enableLed(true);
+
+        Color.RGBToHSV(firstRGB.red() * 8, firstRGB.green() * 8, firstRGB.blue() * 8, hsvValuesFirst);
+        telemetry.addData("ClearRight", firstRGB.alpha());
+        telemetry.addData("RedRight  ", firstRGB.red());
+        telemetry.addData("GreenRight", firstRGB.green());
+        telemetry.addData("BlueRight ", firstRGB.blue());
+        telemetry.addData("HueRight", hsvValuesFirst[0]);
+
+        /*
         sensorRGB.enableLed(false);
 
         // convert the RGB values to HSV values.
@@ -409,10 +498,10 @@ public class Autonomous extends Hardware
         telemetry.addData("Test 1", hsvValues[1]);
         telemetry.addData("Test 2", hsvValues[2]);
 
-
+        */
     }
     // finds color of the beacon
-    private class ReadBeacon
+    /*private class ReadBeacon
     {
         int state;
 
@@ -458,7 +547,7 @@ public class Autonomous extends Hardware
             state = 1;
             return true;
         }
-    }
+    } */
 
 
     private class MoveArm { //move the beacon bumper
@@ -585,6 +674,112 @@ public class Autonomous extends Hardware
         }
 
     }
+
+    private class DriveStraightColor {
+        int state;
+        String drift;
+        long startTime;
+
+        DriveStraightColor() {
+            state = -1;
+            drift = "none";
+        }
+        void reset() {
+            state = -1;
+            drift = "none";
+            reset_drive_encoders();
+            if(sensorGyro != null){
+                sensorGyro.resetZAxisIntegrator();
+            }
+        }
+        boolean action(float speed, int encoderCount) {
+            if (state == 1) {
+                return false;
+            }
+
+            telemetry.addData("17", "State: " + state);
+
+            xVal = sensorGyro.rawX();
+            yVal = sensorGyro.rawY();
+            zVal = sensorGyro.rawZ();
+
+            heading = sensorGyro.getHeading();
+
+            if (state == -1) {
+                reset_drive_encoders();
+                sensorGyro.resetZAxisIntegrator();
+                startTime = System.currentTimeMillis();
+                state = 3;
+                drift = "none";
+                return true;
+            }
+            if (state == 3) {
+                if (have_drive_encoders_reset() && (System.currentTimeMillis() > startTime + 2 * 1000) && heading == 0) {
+                    state = 0;
+                }
+                return true;
+            }
+            if (state == 2) {
+                if (have_drive_encoders_reset()) {
+                    state = 1;
+                }
+                return true;
+            }
+
+
+            //should be between 358 and 2
+            float rightSpeed = speed;
+            float leftSpeed = speed;
+
+            run_using_encoders();
+            if (drift.equals("none")){
+                if (heading < 180 && heading > 1) {
+                    drift = "right";
+                } else if (heading > 180 && heading < 359) {
+                    drift = "left";
+                }
+                set_drive_power(speed, speed);
+            } else if (drift.equals("right")) {
+                if (heading > 359 || heading < 10) {
+                    leftSpeed += 0.1D;
+                } else {
+                    drift = "none";
+                }
+            } else if (drift.equals("left")) {
+                if (heading > 300 || heading < 1) {
+                    rightSpeed += 0.1D;
+                } else {
+                    drift = "none";
+                }
+            }
+            set_drive_power(-leftSpeed, -rightSpeed);
+
+            telemetry.addData("Drift", drift);
+            //if it recognizes we need a correction - saves the heading, goes until it's at the opposite heading
+            //THEN straightens out
+
+            //use some cosine or sine function to scale the speed change to the degree off?
+            //cosine - speed * cos(difference)
+            //unnecessarily complicated for now
+
+            if (have_drive_encoders_reached(encoderCount, encoderCount)) {
+                reset_drive_encoders();
+                sensorGyro.resetZAxisIntegrator();
+                set_drive_power(0.0f, 0.0f);
+                state = 2;
+            }
+            if (secondRGB.red() >= 2){  //TODO make 2 a variable
+                reset_drive_encoders();
+                sensorGyro.resetZAxisIntegrator();
+                set_drive_power(0.0f, 0.0f);
+                state = 2;
+            }
+
+            return true;
+        }
+
+    }
+
 
 
     private class DropClimbers {
@@ -796,6 +991,83 @@ public class Autonomous extends Hardware
             }*/
 
             if (((pass == 1 || !ftcConfig.param.colorIsRed) && currentValue > grey)) {
+                state = 2;
+                set_drive_power(0.0f, 0.0f);
+                reset_drive_encoders();
+            } else if (System.currentTimeMillis() > (startTime + 5 * 1000)) {
+                state = 13;
+            }
+
+            return true;
+        }
+
+
+    }
+
+    private class ColorReverse {
+        int state;
+        long startTime;
+        double currentValue1;
+        double currentValue2;
+
+        ColorReverse(){
+            state = -1;
+        }
+        void reset() {
+            state = -1;
+        }
+        boolean action (float speed) {
+            speed = -speed;
+
+            if (state == 1) {
+                return false;
+            }
+
+            if (state == 13) {
+                return Stop();
+            }
+
+            currentValue2 = secondRGB.red();
+            currentValue1 = firstRGB.red();
+
+
+
+            if (state == -1) {
+                reset_drive_encoders();
+                state = 3;
+                return true;
+            }
+            if (state == 3) {
+                if (have_drive_encoders_reset()) {
+                    state = 0;
+                    startTime = System.currentTimeMillis();
+                }
+                return true;
+            }
+
+            if (state == 2) {
+                if (have_drive_encoders_reset()) {
+                    state = 1;
+                }
+                return true;
+            }
+
+            if (state == 0) {
+                run_using_encoders();
+                set_drive_power(speed, speed);
+            }
+
+           /* if (currentValue1 > white && pass == -1){
+                pass = 0;
+            } else if (currentValue <grey && pass == 0){
+                pass = 1;
+            } /*delete after hereelse if (pass == 1 && currentValue > grey) {
+                pass = 2;
+            } else if (pass == 2 && currentValue < grey) {
+                pass = 3;
+            }*/
+
+            if (currentValue1 > white || currentValue2 > white) {
                 state = 2;
                 set_drive_power(0.0f, 0.0f);
                 reset_drive_encoders();

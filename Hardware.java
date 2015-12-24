@@ -52,7 +52,8 @@ public class Hardware extends OpMode {
 
     private DcMotor v_claw;
 
-    private ColorSensor v_sensorRGB;
+
+    //private ColorSensor v_sensorRGB;
 
     private DcMotor v_winch;
 
