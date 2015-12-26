@@ -33,6 +33,7 @@ public class Autonomous extends Hardware
     //private ColorSensor sensorRGB;
     private ColorSensor firstRGB;
     private ColorSensor secondRGB;
+    private ColorSensor sensorRGB;
    // private DeviceInterfaceModule cdim;
     private GyroSensor sensorGyro;
     private OpticalDistanceSensor sensorODS;
@@ -50,7 +51,7 @@ public class Autonomous extends Hardware
     int xVal, yVal, zVal = 0;
     int heading = 0;
 
-    //ReadBeacon readBeacon1 = new ReadBeacon();
+    ReadBeacon readBeacon1 = new ReadBeacon();
 
     MoveArm moveArmForReset = new MoveArm();
     MoveArm moveArmForBeacon = new MoveArm();
@@ -65,6 +66,7 @@ public class Autonomous extends Hardware
 
     DropClimbers dropClimbers = new DropClimbers();
     DropClimbers dropClimbersIn = new DropClimbers();
+    DropPusherClimber dropClimbersForButtonPusher = new DropPusherClimber();
 
     DriveStraight initialDriveStraight = new DriveStraight();
     DriveStraight driveStraightToBeaconZone = new DriveStraight();
@@ -82,6 +84,11 @@ public class Autonomous extends Hardware
     Drive driveBackForClimbers = new Drive();
     Drive driveBackFinal = new Drive();
     Drive driveToDoubleCheckButton = new Drive();
+    Drive driveToSetUp = new Drive();
+    Drive driveToAlignBlue = new Drive();
+    Drive driveToAlignRed = new Drive();
+    Drive driveToPress = new Drive();
+
 
 
     Drive driveM_ToMountain = new Drive();
@@ -103,6 +110,10 @@ public class Autonomous extends Hardware
     GyroTurn gyroTurnToFaceBeacon = new GyroTurn();
     GyroTurn gyroTurnM_ToFaceMountain = new GyroTurn();
     GyroTurn initialGyroTurn = new GyroTurn();
+    GyroTurn alignGyroTurn1Blue = new GyroTurn();
+    GyroTurn alignGyroTurn2Blue = new GyroTurn();
+    GyroTurn alignGyroTurn1Red = new GyroTurn();
+    GyroTurn alignGyroTurn2Red = new GyroTurn();
 
 
     Pause pauseGyro = new Pause();
@@ -115,6 +126,8 @@ public class Autonomous extends Hardware
     Pause pauseM = new Pause();
     Pause pauseM2 = new Pause();
 
+    AlignSwivle alignSwivle = new AlignSwivle();
+
 
     @Override public void start () {
         //Hardware start method
@@ -125,13 +138,13 @@ public class Autonomous extends Hardware
 
 
 
-      /*  try {
-            sensorRGB = hardwareMap.colorSensor.get("mr0");
+        try {
+            sensorRGB = hardwareMap.colorSensor.get("mr3");
         } catch (Exception p_exception) {
             m_warning_message("color sensor");
             DbgLog.msg(p_exception.getLocalizedMessage());
             sensorRGB = null;
-        }*/
+        }
 
         try {
             firstRGB = hardwareMap.colorSensor.get("mr");
@@ -211,6 +224,10 @@ public class Autonomous extends Hardware
         driveBackForClimbers.reset();
         driveToDoubleCheckButton.reset();
         driveBackFinal.reset();
+        driveToSetUp.reset();
+        driveToAlignBlue.reset();
+        driveToAlignRed.reset();
+        driveToPress.reset();
 
         driveM_ToMountain.reset();
         driveM_OntoMountain.reset();
@@ -223,6 +240,10 @@ public class Autonomous extends Hardware
         gyroTurnToFaceBeacon.reset();
         gyroTurnM_ToFaceMountain.reset();
         initialGyroTurn.reset();
+        alignGyroTurn1Blue.reset();
+        alignGyroTurn2Blue.reset();
+        alignGyroTurn1Red.reset();
+        alignGyroTurn2Red.reset();
 
         odsTurn1.reset();
 
@@ -241,11 +262,14 @@ public class Autonomous extends Hardware
 
         dropClimbers.reset();
         dropClimbersIn.reset();
+        dropClimbersForButtonPusher.reset();
 
         driveStraightToBeaconZone.reset();
         initialDriveStraight.reset();
         driveFarther.reset();
         initialDriveStraightColor.reset();
+
+        alignSwivle.reset();
 
 
 
@@ -271,12 +295,12 @@ public class Autonomous extends Hardware
         if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_BEACON){
             if (moveArmForReset.action(beaconPosition)){
                 step = "move arm 1 to reset";
-            }/* else if (delayBeacon.action()) {
+            } /*else if (delayBeacon.action()) {
                 step = "delay";
             } else if (initialDriveStraight.action(0.3f,12)){
                 step = "drive";
-            } else if (initialGyroTurn.action(0.3f,45)){
-                step = "first turn";
+            }  else if (initialGyroTurn.action(0.3f,45)){
+                step = "first turn";}
             } else if (initialDriveStraightColor.action(0.3f, 87)) {
                 step = "drive straight color 1";
             } else if (driveFarther.action(0.3f,12)){
@@ -285,8 +309,41 @@ public class Autonomous extends Hardware
                 step = "gyro to push away debris";
             } else if (driveToPushAwayDebris.action(0.3f, 20)){
                 step = "drive to push away debris";
-            } else if (colorReverse.action(-0.3f)){
+            } else if (colorReverse.action(-0.2f)){
                 step = "color reverse";
+            } else if (alignSwivle.action(0.3f)){
+                step = "align swivle";
+            }*/ else if (readBeacon1.action()) {
+                step = "read beacon";
+            } else if (driveBackForClimbers.action(-0.3f, 1)) {
+                step = "back up for climbers";
+            } else if (pauseBeforeClimbers.action(2)){
+                step = "pause before climbers";
+            }else if (dropClimbers.action(true)) {
+                step = "drop climbers";
+            } else if (pauseToDropClimbers.action(3)) {
+                step = "last pause";
+            } else if (dropClimbersIn.action(false)) {
+                step = "last drive back!";
+            } else if (color.equals("blue")){
+                if (alignGyroTurn1Blue.action (0.3f, 15)){
+                    step = "15 degree to align 1 blue";
+                } else if (driveToAlignBlue.action(-0.3f, 12)){
+                    step = "drive to align blue";
+                } else if (alignGyroTurn2Blue.action (-0.3f, 360-15)){
+                    step = " 15 degree to align 2 blue";
+            }} else if (color.equals("red")){
+                if (alignGyroTurn1Red.action (-0.3f, 360-15)){
+                    step = "15 degree to align 1 red";
+                }else if (driveToAlignRed.action(-0.3f, 6)){
+                    step = "drive to align blue";
+                } else if (alignGyroTurn2Red.action (0.3f, 15)){
+                    step = "15 degree to align 2 red";
+                }
+            } else if (dropClimbersForButtonPusher.action (true)){
+                step = "climber dropper button pusher";
+            } else if (driveToPress.action(0.2f, 10)){
+                step = "drive to press button";
             }
 
             /*
@@ -501,7 +558,7 @@ public class Autonomous extends Hardware
         */
     }
     // finds color of the beacon
-    /*private class ReadBeacon
+    private class ReadBeacon
     {
         int state;
 
@@ -547,7 +604,7 @@ public class Autonomous extends Hardware
             state = 1;
             return true;
         }
-    } */
+    }
 
 
     private class MoveArm { //move the beacon bumper
@@ -783,8 +840,28 @@ public class Autonomous extends Hardware
 
 
     private class DropClimbers {
+    int state;
+    DropClimbers(){
+        state = -1;}
+    void reset(){
+        state = -1;
+    }
+    boolean action(boolean deploy){
+        if (state == 1){
+            return false;
+        }
+        if ( color != "unknown" && deploy){
+            climber_dropper_out();
+        } else {
+            climber_dropper_in();
+        }
+        state = 1;
+        return true;
+    }
+}
+    private class DropPusherClimber {
         int state;
-        DropClimbers(){
+        DropPusherClimber(){
             state = -1;}
         void reset(){
             state = -1;
@@ -794,9 +871,9 @@ public class Autonomous extends Hardware
                 return false;
             }
             if ( color != "unknown" && deploy){
-                climber_dropper_out();
+                climber_dropper_pusher_out();
             } else {
-                climber_dropper_in();
+                climber_dropper_pusher_in();
             }
             state = 1;
             return true;
@@ -917,6 +994,41 @@ public class Autonomous extends Hardware
             return true;
         }
     }
+    private class AlignSwivle {
+        int state;
+        AlignSwivle() {
+            state = -1;
+        }
+        void reset()
+        {
+            state = -1;
+        }
+        boolean action(float speed){
+            if (state == 1){
+                return false;
+            }
+
+            // if the right sensor reads white then it will rotate
+            if ( firstRGB.red() >= 3) {
+                set_drive_power(0, -speed);
+            }
+            // if the right sensor read grey then it will back up
+            else if (firstRGB.red() == 0) {
+                set_drive_power(-speed, -speed);
+               // if both are grey then stop
+                if (secondRGB.red() == 0){
+                    set_drive_power (0,0);
+                }
+            }
+            //state = 1;
+            return true;
+        }
+    }
+
+
+
+
+
 
 
     public int getAlignDistance() { //TODO - may have to change back to just normal
@@ -1067,11 +1179,11 @@ public class Autonomous extends Hardware
                 pass = 3;
             }*/
 
-            if (currentValue1 > white || currentValue2 > white) {
+            if (currentValue1 >= 3 /*|| currentValue2 >= 3 */) {
                 state = 2;
                 set_drive_power(0.0f, 0.0f);
                 reset_drive_encoders();
-            } else if (System.currentTimeMillis() > (startTime + 5 * 1000)) {
+            } else if (System.currentTimeMillis() > (startTime + 3 * 1000)) {
                 state = 13;
             }
 
@@ -1225,7 +1337,62 @@ public class Autonomous extends Hardware
             return true;
         }
     }
+    private class GyroTurnCompass {
+        int state;
+        long startTime;
 
+        GyroTurnCompass() {
+            state = -1;
+            // run_using_encoders();
+        }
+
+        void reset() {
+            state = -1;
+        }
+
+        boolean action(float speed, int desiredHeading) {
+            speed = -speed; //robot is backwards
+
+            if (state == 1){
+                return false;
+            }
+
+            xVal = sensorGyro.rawX();
+            yVal = sensorGyro.rawY();
+            zVal = sensorGyro.rawZ();
+
+            heading = sensorGyro.getHeading();
+
+            if (state == -1){
+                state = 3;
+                return true;
+            }
+
+            if (state == 0) {
+                if (!ftcConfig.param.colorIsRed) {
+                    set_drive_power(-speed, speed);
+                } else {
+                    set_drive_power(speed, -speed);
+                }
+
+                if (ftcConfig.param.colorIsRed) {
+                    desiredHeading = 360 - desiredHeading;
+                }
+
+                if (Math.abs(heading - desiredHeading) < 5 || System.currentTimeMillis() > (startTime + 13 * 1000)) {
+                    state = 2;
+                    sensorGyro.resetZAxisIntegrator();
+                    reset_drive_encoders();
+                    set_drive_power(0.0f, 0.0f);
+                }
+            }
+
+            telemetry.addData("Desired Heading", desiredHeading);
+            telemetry.addData("Color", ftcConfig.param.colorIsRed);
+
+            return true;
+        }
+    }
 
 
 
