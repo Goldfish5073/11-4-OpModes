@@ -185,13 +185,13 @@ public class TeleOp extends Hardware {
 
         //////////////////////////////////////////////////////////////////////////////
         // PUSH BEACON
-        if (gamepad2.start) {
+        /*if (gamepad2.start) {
             push_beacon(true);
         } else if (gamepad1.start) {
             push_beacon(false);
         }
 
-        telemetry.addData("Push Beacon", v_servo_push_beacon.getPosition());
+        telemetry.addData("Push Beacon", v_servo_push_beacon.getPosition()); */
 
 
         /////////////////////////////////////////////////////////////////////////////
