@@ -13,9 +13,13 @@ public class TeleOp extends Hardware {
     double firstArmSpeed = 0.3; //0.3 top
     double firstArmSpeedBack = 0.3; //0.2
     double secondArmSpeed = 0.4;//0.5
-    double secondArmSpeedBack = 0.2;//0.25 bottom
+    double secondArmSpeedBack = 0.4;//0.25 bottom
     double winchSpeed = 1.0;
     double clawSpeed = 1.0;
+
+    boolean prevDPadLeft = false;
+    boolean prevDPadRight = false;
+
 
     int driveScale = driveSpeeds.length - 1;
     //firstArm is foremarm (top), secondArm is bicep (bottom)
@@ -162,6 +166,26 @@ public class TeleOp extends Hardware {
         } else {
             set_winch_power(0.0);
         }
+
+        //////////////////////////////////////////////////////////////////////////////
+        //DEBRIS
+        if (gamepad1.dpad_left) {
+            if (!prevDPadLeft) {
+                debris_higher();
+            }
+            prevDPadLeft = true;
+        } else if (!gamepad1.dpad_left) {
+            prevDPadLeft = false;
+        }
+        if (gamepad1.dpad_right) {
+            if(!prevDPadRight) {
+                debris_lower();
+            }
+            prevDPadRight = true;
+        } else if (!gamepad1.dpad_right) {
+            prevDPadRight = false;
+        }
+
 
 
         //////////////////////////////////////////////////////////////////////////////

@@ -22,17 +22,27 @@ public class Hardware extends OpMode {
     double tab_slapper_in = 0.9D;
     double tab_slapper_out = 0.3D;
 
-    double climber_dropper_in = 0.03D;
-    double climber_dropper_out = 0.9D;
+    double climber_dropper_in = 0.1D;
+    double climber_dropper_out = 0.95D;
     double climber_dropper_pusher_in = 0.0D;
-    double climber_dropper_pusher_out = 1.0D;
+    double climber_dropper_pusher_out = 0.95D;
 
     double hook_in = 0.1D;
+    double hook_out = 0.9D;
+    double hook_increment = 0.05D;
+
+    double debris_in = 0.1D;
+    double debris_out = 0.5D;
 
     double ratchet_deployed = 0.6D;
     double ratchet_released = 0.2D;
     double random_initial = 0.0D;
     double random_final = 0.5D;
+
+    double debris_mid = 0.65D;
+    double debris_low = 0.1D;
+    double debris_high = 0.9D;
+    double debris_increment = 0.05D;
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,6 +80,8 @@ public class Hardware extends OpMode {
     public Servo v_climber_dropper;
 
     public Servo v_ratchet;
+
+    public Servo v_dank_debris_dropper;
 
 
 
@@ -173,6 +185,15 @@ public class Hardware extends OpMode {
 
 
         //SERVOS
+        try {
+            v_dank_debris_dropper = hardwareMap.servo.get ("debris");
+            v_dank_debris_dropper.setPosition(debris_mid);
+        } catch (Exception p_exception) {
+            m_warning_message ("debris");
+            DbgLog.msg (p_exception.getLocalizedMessage ());
+            v_dank_debris_dropper = null;
+        }
+
         try {
             v_hook = hardwareMap.servo.get ("hook");
             v_hook.setPosition(hook_in);
@@ -318,18 +339,31 @@ public class Hardware extends OpMode {
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////////
+    //DEBRIS
+    void debris_lower() {
+        if (!(v_dank_debris_dropper.getPosition() < debris_low)) {
+            v_dank_debris_dropper.setPosition(v_dank_debris_dropper.getPosition() - debris_increment);
+        }
+    }
 
+    void debris_higher() {
+        if (!(v_dank_debris_dropper.getPosition() > debris_high )) {
+            v_dank_debris_dropper.setPosition(v_dank_debris_dropper.getPosition() + debris_increment);
+        }
+    }
     //////////////////////////////////////////////////////////////////////////////
     //HOOK
     void hook_out (){
         if (v_hook != null) {
-            if (v_hook.getPosition() < 0.9D){}
-                v_hook.setPosition(v_hook.getPosition() + .05);
+            if (v_hook.getPosition() < hook_out) {
+                v_hook.setPosition(v_hook.getPosition() + hook_increment);
+            }
         }
     }
     void hook_in (){
         if (v_hook.getPosition() > hook_in) {
-            v_hook.setPosition (v_hook.getPosition() - .05);
+            v_hook.setPosition (v_hook.getPosition() - hook_increment);
         }
     }
 
@@ -433,6 +467,9 @@ public class Hardware extends OpMode {
         if(v_climber_dropper != null) {
             telemetry.addData("008", "Climber Dropper: " + v_climber_dropper.getPosition());
         }
+        if (v_dank_debris_dropper != null) {
+            telemetry.addData("009", "Debris Dropper: " + v_dank_debris_dropper.getPosition());
+        }
     }
 
     public void update_gamepad_telemetry () {
@@ -446,6 +483,9 @@ public class Hardware extends OpMode {
             telemetry.addData("106", "GP1 RB: " + gamepad1.right_bumper);
             telemetry.addData("107", "GP1 A: " + gamepad1.a);
             telemetry.addData("108", "GP1 B: " + gamepad1.b);
+            telemetry.addData("109", "GP1 DPad LEFT: " + gamepad1.dpad_left);
+            telemetry.addData("110", "GP1 DPad RIGHT: " + gamepad1.dpad_right);
+
         }
         if(gamepad2 != null) {
             telemetry.addData("200", "GAMEPAD 2-------------------------------");

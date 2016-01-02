@@ -86,8 +86,6 @@ public class Autonomous extends Hardware
     Drive driveBackFinal = new Drive();
     Drive driveToDoubleCheckButton = new Drive();
     Drive driveToSetUp = new Drive();
-    Drive driveToAlignBlue = new Drive();
-    Drive driveToAlignRed = new Drive();
     Drive driveToPress = new Drive();
 
 
@@ -111,10 +109,7 @@ public class Autonomous extends Hardware
     GyroTurn gyroTurnToFaceBeacon = new GyroTurn();
     GyroTurn gyroTurnM_ToFaceMountain = new GyroTurn();
     GyroTurn initialGyroTurn = new GyroTurn();
-    GyroTurn alignGyroTurn1Blue = new GyroTurn();
-    GyroTurn alignGyroTurn2Blue = new GyroTurn();
-    GyroTurn alignGyroTurn1Red = new GyroTurn();
-    GyroTurn alignGyroTurn2Red = new GyroTurn();
+
 
 
     Pause pauseGyro = new Pause();
@@ -129,22 +124,8 @@ public class Autonomous extends Hardware
     GyroTurnCompass gyroTurnCompassToLine = new GyroTurnCompass();
 
 
-    @Override public void start () {
-        //Hardware start method
-        super.start();
-
-        reset_drive_encoders();
-
-        step = "start";
-        beaconPosition = "unknown";
-
-        try {
-            sensorRGB = hardwareMap.colorSensor.get("mr3");
-        } catch (Exception p_exception) {
-            m_warning_message("color sensor");
-            DbgLog.msg(p_exception.getLocalizedMessage());
-            sensorRGB = null;
-        }
+    @Override public void init() {
+        super.init();
 
         try {
             firstRGB = hardwareMap.colorSensor.get("mr");
@@ -168,6 +149,28 @@ public class Autonomous extends Hardware
             DbgLog.msg(p_exception.getLocalizedMessage());
             secondRGB = null;
         }
+    }
+
+
+    @Override public void start () {
+        //Hardware start method
+        super.start();
+
+        reset_drive_encoders();
+
+        step = "start";
+        beaconPosition = "unknown";
+
+        try {
+            sensorRGB = hardwareMap.colorSensor.get("mr3");
+            sensorRGB.enableLed(false);
+        } catch (Exception p_exception) {
+            m_warning_message("color sensor");
+            DbgLog.msg(p_exception.getLocalizedMessage());
+            sensorRGB = null;
+        }
+
+
 
        /* try {
             cdim = hardwareMap.deviceInterfaceModule.get("sensors");
@@ -201,6 +204,8 @@ public class Autonomous extends Hardware
         // //sensorRGB = hardwareMap.colorSensor.get("mr");
         sensorGyro.resetZAxisIntegrator();
         sensorGyro.calibrate();
+        firstRGB.enableLed(true);
+        secondRGB.enableLed(true);
 
 
         // readBeacon1.reset();
@@ -225,8 +230,6 @@ public class Autonomous extends Hardware
         driveToDoubleCheckButton.reset();
         driveBackFinal.reset();
         driveToSetUp.reset();
-        driveToAlignBlue.reset();
-        driveToAlignRed.reset();
         driveToPress.reset();
 
         driveM_ToMountain.reset();
@@ -240,10 +243,7 @@ public class Autonomous extends Hardware
         gyroTurnToFaceBeacon.reset();
         gyroTurnM_ToFaceMountain.reset();
         initialGyroTurn.reset();
-        alignGyroTurn1Blue.reset();
-        alignGyroTurn2Blue.reset();
-        alignGyroTurn1Red.reset();
-        alignGyroTurn2Red.reset();
+
 
         odsTurn1.reset();
 
@@ -274,7 +274,6 @@ public class Autonomous extends Hardware
 
 
     } // start
-
 
 
     @Override public void loop ()
@@ -567,7 +566,58 @@ public class Autonomous extends Hardware
 
         */
     }
+    private class BeaconAlign {
+        GyroTurnCompass alignGyroTurn1Blue = new GyroTurnCompass();
+        GyroTurnCompass alignGyroTurn2Blue = new GyroTurnCompass();
+        GyroTurnCompass alignGyroTurn1Red = new GyroTurnCompass();
+        GyroTurnCompass alignGyroTurn2Red = new GyroTurnCompass();
+        Drive driveToAlignBlue = new Drive();
+        Drive driveToAlignRed = new Drive();
+        BeaconAlign(){
+
+        }
+        void reset(){
+            driveToAlignBlue.reset();
+            driveToAlignRed.reset();
+            alignGyroTurn1Blue.reset();
+            alignGyroTurn2Blue.reset();
+            alignGyroTurn1Red.reset();
+            alignGyroTurn2Red.reset();
+        }
+        boolean action(){
+             if (color.equals("blue")){
+                if (alignGyroTurn1Blue.action (0.3f, 15, 345)){
+                    step = "15 degree to align 1 blue";
+                    return true;
+                } else if (driveToAlignBlue.action(-0.3f, 12)){
+                    step = "drive to align blue";
+                    return true;
+                } else if (alignGyroTurn2Blue.action (-0.3f, 360-15, 15)){
+                    step = " 15 degree to align 2 blue";
+                    return true;
+                } else {
+                    return false;
+                }
+             } else if (color.equals("red")){
+                if (alignGyroTurn1Red.action (-0.3f, 360-15, 15)){
+                    step = "15 degree to align 1 red";
+                    return true;
+                }else if (driveToAlignRed.action(-0.3f, 6)){
+                    step = "drive to align blue";
+                    return true;
+                } else if (alignGyroTurn2Red.action (0.3f, 15, 345)){
+                    step = "15 degree to align 2 red";
+                    return true;
+                } else {
+                    return false;
+                }
+            } else { //when color is unknown
+                 return false;
+             }
+        }
+    }
     // finds color of the beacon
+
     private class ReadBeacon
     {
         int state;
@@ -1152,7 +1202,7 @@ public class Autonomous extends Hardware
                 state = 2;
                 set_drive_power(0.0f, 0.0f);
                 reset_drive_encoders();
-            } else if (System.currentTimeMillis() > (startTime + 5 * 1000)) {
+            } else if (System.currentTimeMillis() > (startTime + 10 * 1000)) {
                 state = 13;
             }
 
@@ -1168,27 +1218,34 @@ public class Autonomous extends Hardware
         double currentValue1;
         double currentValue2;
 
+
         ColorReverse(){
             state = -1;
         }
         void reset() {
             state = -1;
+            firstRGB.enableLed(false);
+            firstRGB.enableLed(false);
+            telemetry.addData("Location", state);
+
         }
         boolean action (float speed) {
             speed = -speed;
+            telemetry.addData("Location", state);
+
+            firstRGB.enableLed(true);
+            secondRGB.enableLed(true);
 
             if (state == 1) {
+                firstRGB.enableLed(false);
+                secondRGB.enableLed(false);
                 return false;
             }
 
             if (state == 13) {
+                telemetry.addData("Bad", "stop in color reverse");
                 return Stop();
             }
-
-            currentValue2 = secondRGB.red();
-            currentValue1 = firstRGB.red();
-
-
 
             if (state == -1) {
                 reset_drive_encoders();
@@ -1225,13 +1282,21 @@ public class Autonomous extends Hardware
                 pass = 3;
             }*/
 
-            if (currentValue1 >= 3 /*|| currentValue2 >= 3 */) {
+            color();
+
+            currentValue2 = secondRGB.red();
+            currentValue1 = firstRGB.red();
+
+
+            if (currentValue1 >= 3 || currentValue2 >= 3) {
                 state = 2;
                 set_drive_power(0.0f, 0.0f);
                 reset_drive_encoders();
-            } else if (System.currentTimeMillis() > (startTime + 3 * 1000)) {
+            } else if (System.currentTimeMillis() > (startTime + 5 * 1000)) {
                 state = 13;
             }
+
+
 
             return true;
         }
@@ -1422,22 +1487,40 @@ public class Autonomous extends Hardware
 
             done = false;
             buffer = 3;
-
+//TODO - ONLY reset drive encoders in the INIT
             if (state == -1){
-                state = 0;
+                reset_drive_encoders();
+                state = 3;
+            }
+            if (state == 3) {
+                if (have_drive_encoders_reset()){
+                    state = 0;
+                    startTime = System.currentTimeMillis();
+                }
+                return true;
             }
 
+            if (state == 2) {
+                if (have_drive_encoders_reset()) {
+                    state = 1;
+                }
+                return true;
+            }
+
+
             if (state == 0) {
-                if (direction == 0){ // case for if we want to turn to 0
-                    if ((heading >= 0 && heading< buffer) || heading > (360 - buffer)){
+                run_using_encoders();
+                if (direction == 0) { // case for if we want to turn to 0
+                    if ((heading >= 0 && heading < buffer) || heading > (360 - buffer)) {
                         done = true;
                     }
-                    else {
-                        if (Math.abs(heading - direction) < buffer) {
-                            done = true;
-                        }
+                }
+                else {
+                    if (Math.abs(heading - direction) < buffer) {
+                        done = true;
                     }
                 }
+
 
                 if (!done){
                     difference = heading - direction;
