@@ -24,8 +24,9 @@ public class Hardware extends OpMode {
 
     double climber_dropper_in = 0.1D;
     double climber_dropper_out = 0.95D;
+    double climber_dropper_mid = 0.4D;
     double climber_dropper_pusher_in = 0.0D;
-    double climber_dropper_pusher_out = 0.95D;
+    double climber_dropper_pusher_out = 1.0D;
 
     double hook_in = 0.1D;
     double hook_out = 0.9D;
@@ -406,6 +407,11 @@ public class Hardware extends OpMode {
             v_climber_dropper.setPosition(climber_dropper_in);
         }
     }
+
+    void climber_dropper_mid() {
+        v_climber_dropper.setPosition(climber_dropper_mid);
+    }
+
     void climber_dropper_out(){
         if(v_climber_dropper.getPosition() < climber_dropper_out){
             v_climber_dropper.setPosition(climber_dropper_out);

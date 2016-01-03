@@ -40,6 +40,8 @@ public class Autonomous extends Hardware
     private OpticalDistanceSensor sensorODS;
     float hsvValuesFirst[] = {0F,0F,0F};
     float hsvValuesSecond[] = {0F,0F,0F};
+    float hsvValuesSensor[] = {0F,0F,0F};
+
 
 
     //  hardwareMap.logDevices();
@@ -116,13 +118,14 @@ public class Autonomous extends Hardware
     Pause pauseAfterODSAlign = new Pause();
     Pause pauseAfterFaceBeaconTurn = new Pause();
     Pause pauseToReadBeacon = new Pause();
+    Pause pauseForBeaconPusher = new Pause();
 
     Pause pauseM = new Pause();
     Pause pauseM2 = new Pause();
 
     AlignSwivle alignSwivle = new AlignSwivle();
     GyroTurnCompass gyroTurnCompassToLine = new GyroTurnCompass();
-
+    BeaconAlign beaconAlign = new BeaconAlign();
 
     @Override public void init() {
         super.init();
@@ -208,7 +211,7 @@ public class Autonomous extends Hardware
         secondRGB.enableLed(true);
 
 
-        // readBeacon1.reset();
+        readBeacon1.reset();
 
         moveArmForReset.reset();
         moveArmForBeacon.reset();
@@ -252,6 +255,7 @@ public class Autonomous extends Hardware
         pauseToReadBeacon.reset();
         pauseM.reset();
         pauseM2.reset();
+        pauseForBeaconPusher.reset();
 
         pauseGyro.reset();
 
@@ -270,7 +274,7 @@ public class Autonomous extends Hardware
 
         alignSwivle.reset();
         gyroTurnCompassToLine.reset();
-
+        beaconAlign.reset();
 
 
     } // start
@@ -288,16 +292,26 @@ public class Autonomous extends Hardware
         telemetry.addData("Heading: ", heading);
         // telemetry.addData("ods",sensorODS.getLightDetected() * 100 );
         telemetry.addData("beacon position", beaconPosition);
+        telemetry.addData("beacon color", color);
+
+        color();
+        beaconColor();
        // telemetry.addData("color", color);
 
         if (sensorGyro.isCalibrating()) {
             return;
         }
 
+
+
         if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_BEACON){
             if (moveArmForReset.action(beaconPosition)){
                 step = "move arm 1 to reset";
-            } /*else if (delayBeacon.action()) {
+            } else if (pauseM.action(5)){
+
+            }
+
+            /*else if (delayBeacon.action()) {
                 step = "delay";
             } else if (initialDriveStraight.action(0.3f,12)){
                 step = "drive";
@@ -311,11 +325,30 @@ public class Autonomous extends Hardware
                 step = "gyro to push away debris";
             } else if (driveToPushAwayDebris.action(0.3f, 20)){
                 step = "drive to push away debris";
-            }*/ else if (colorReverse.action(-0.2f)){
+            }*/  else if (colorReverse.action(-0.2f)){
                 step = "color reverse";
-            } else if(gyroTurnCompassToLine.action(0.3f,270,90)){
+            } else if (driveToAlignAfterODS.action(0.2f, 4)) { //OUT //amount was getAlignDistance() (3 red and 10 blue)
+                step = "drive forward a little bit to align";
+            } else if(gyroTurnCompassToLine.action(0.2f,275,85)){ //should be 270 and 90 not 275 and 85
                 step = "gyro turn compass to line";
-            }/*else if (alignSwivle.action(0.3f)){
+            } else if ( driveToReadBeacon.action(0.2f, 18)){ //OUT
+                step = "drive forward to read beacon";
+            } else if (pauseToReadBeacon.action(1)){
+                step = "pause to read beacon";
+            } else if (readBeacon1.action()) {
+                step = "read beacon";
+            } else if (dropClimbersComplete.action()){
+                step = "drop climbers complete";
+            } else if (beaconAlign.action()){
+                step = "beacon align";
+            } else if (dropClimbersForButtonPusher.action(true)) {
+                step = "button pusher";
+            } else if (pauseForBeaconPusher.action(3)) {
+                step = "button pusher pause";
+            } else if (!color.equals("unknown") && driveToPressButton.action(0.25f, 2)) {
+                step = "press the button!!!";
+            }
+            /*else if (alignSwivle.action(0.3f)){
                 step = "align swivle";
             } else if (readBeacon1.action()) {
                 step = "read beacon";
@@ -425,7 +458,6 @@ public class Autonomous extends Hardware
             }
 
         }
-        color();
         update_telemetry();
     }
 
@@ -528,12 +560,27 @@ public class Autonomous extends Hardware
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //HELPER METHODS
 
+    public void beaconColor()
+    {
+        sensorRGB.enableLed(false);
+
+
+        Color.RGBToHSV(sensorRGB.red() * 8, sensorRGB.green() * 8, sensorRGB.blue() * 8, hsvValuesSensor);
+
+        telemetry.addData("AlphaBeacon", sensorRGB.alpha());
+        telemetry.addData("RedBeacon  ", sensorRGB.red());
+        telemetry.addData("GreenBeacon", sensorRGB.green());
+        telemetry.addData("BlueBeacon ", sensorRGB.blue());
+        telemetry.addData("HueBeacon", hsvValuesSensor[0]);
+    }
+
+
     public void color()
     {
         secondRGB.enableLed(true);
 
-        Color.RGBToHSV(secondRGB.red() * 8, secondRGB.green() * 8, secondRGB.blue() * 8, hsvValuesSecond);
-        telemetry.addData("ClearLeft", secondRGB.alpha());
+        //Color.RGBToHSV(secondRGB.red() * 8, secondRGB.green() * 8, secondRGB.blue() * 8, hsvValuesSecond);
+        telemetry.addData("AlphaLeft", secondRGB.alpha());
         telemetry.addData("RedLeft  ", secondRGB.red());
         telemetry.addData("GreenLeft", secondRGB.green());
         telemetry.addData("BlueLeft ", secondRGB.blue());
@@ -541,8 +588,8 @@ public class Autonomous extends Hardware
 
         firstRGB.enableLed(true);
 
-        Color.RGBToHSV(firstRGB.red() * 8, firstRGB.green() * 8, firstRGB.blue() * 8, hsvValuesFirst);
-        telemetry.addData("ClearRight", firstRGB.alpha());
+        //Color.RGBToHSV(firstRGB.red() * 8, firstRGB.green() * 8, firstRGB.blue() * 8, hsvValuesFirst);
+        telemetry.addData("AlphaRight", firstRGB.alpha());
         telemetry.addData("RedRight  ", firstRGB.red());
         telemetry.addData("GreenRight", firstRGB.green());
         telemetry.addData("BlueRight ", firstRGB.blue());
@@ -586,26 +633,26 @@ public class Autonomous extends Hardware
         }
         boolean action(){
              if (color.equals("blue")){
-                if (alignGyroTurn1Blue.action (0.3f, 15, 345)){
+                if (alignGyroTurn1Blue.action (0.2f, 255, 100)){
                     step = "15 degree to align 1 blue";
                     return true;
-                } else if (driveToAlignBlue.action(-0.3f, 12)){
+                } else if (driveToAlignBlue.action(-0.2f, 6)){
                     step = "drive to align blue";
                     return true;
-                } else if (alignGyroTurn2Blue.action (-0.3f, 360-15, 15)){
+                } else if (alignGyroTurn2Blue.action (0.2f, 270, 90)){
                     step = " 15 degree to align 2 blue";
                     return true;
                 } else {
                     return false;
                 }
              } else if (color.equals("red")){
-                if (alignGyroTurn1Red.action (-0.3f, 360-15, 15)){
+                if (alignGyroTurn1Red.action (0.2f, 280, 80)){
                     step = "15 degree to align 1 red";
                     return true;
-                }else if (driveToAlignRed.action(-0.3f, 6)){
+                }else if (driveToAlignRed.action(-0.2f, 6)){
                     step = "drive to align blue";
                     return true;
-                } else if (alignGyroTurn2Red.action (0.3f, 15, 345)){
+                } else if (alignGyroTurn2Red.action (0.2f, 270, 90)){
                     step = "15 degree to align 2 red";
                     return true;
                 } else {
@@ -639,9 +686,9 @@ public class Autonomous extends Hardware
                 return false;
             }
 
-            color();
+            beaconColor();
 
-            if (hsvValues[0] > 50) {
+            if (sensorRGB.blue() > 0) {
                 color = "blue";
             } else if (sensorRGB.red() > 0) {
                 color = "red";
@@ -1215,8 +1262,12 @@ public class Autonomous extends Hardware
     private class ColorReverse {
         int state;
         long startTime;
-        double currentValue1;
-        double currentValue2;
+        double currentGreen1;
+        double currentGreen2;
+        double currentRed1;
+        double currentRed2;
+        double maxGreen;
+        double maxRed;
 
 
         ColorReverse(){
@@ -1227,11 +1278,15 @@ public class Autonomous extends Hardware
             firstRGB.enableLed(false);
             firstRGB.enableLed(false);
             telemetry.addData("Location", state);
+            maxGreen = 0;
+            maxRed = 0;
 
         }
         boolean action (float speed) {
             speed = -speed;
             telemetry.addData("Location", state);
+            telemetry.addData("Max Green Seen", maxGreen);
+            telemetry.addData("Max Red Seen", maxRed);
 
             firstRGB.enableLed(true);
             secondRGB.enableLed(true);
@@ -1241,6 +1296,25 @@ public class Autonomous extends Hardware
                 secondRGB.enableLed(false);
                 return false;
             }
+
+            currentGreen2 = secondRGB.green();
+            currentGreen1 = firstRGB.green();
+            currentRed1 = firstRGB.red();
+            currentRed2 = secondRGB.red();
+
+            if (currentGreen1 > maxGreen) {
+                maxGreen = currentGreen1;
+            }
+            if (currentGreen2 > maxGreen) {
+                maxGreen = currentGreen2;
+            }
+            if (currentRed1 > maxRed) {
+                maxRed = currentRed1;
+            }
+            if (currentRed2 > maxRed) {
+                maxRed = currentRed2;
+            }
+
 
             if (state == 13) {
                 telemetry.addData("Bad", "stop in color reverse");
@@ -1267,7 +1341,11 @@ public class Autonomous extends Hardware
                 return true;
             }
 
-            if (state == 0) {
+            if (firstRGB.green() > 250 || secondRGB.green() > 250) {
+                climber_dropper_mid();
+                set_drive_power(0.0, 0.0);
+            } else if (state == 0) {
+                climber_dropper_in();
                 run_using_encoders();
                 set_drive_power(speed, speed);
             }
@@ -1282,17 +1360,11 @@ public class Autonomous extends Hardware
                 pass = 3;
             }*/
 
-            color();
-
-            currentValue2 = secondRGB.red();
-            currentValue1 = firstRGB.red();
-
-
-            if (currentValue1 >= 3 || currentValue2 >= 3) {
+            if (currentGreen1 >= 2 || currentGreen2 >= 2) {
                 state = 2;
                 set_drive_power(0.0f, 0.0f);
                 reset_drive_encoders();
-            } else if (System.currentTimeMillis() > (startTime + 5 * 1000)) {
+            } else if (System.currentTimeMillis() > (startTime + 10 * 1000)) {
                 state = 13;
             }
 
@@ -1456,6 +1528,7 @@ public class Autonomous extends Hardware
         float buffer;
         float difference;
         boolean turnCW; // turn clockwise
+        float stopping;
 
 
         GyroTurnCompass() {
@@ -1465,6 +1538,7 @@ public class Autonomous extends Hardware
 
         void reset() {
             state = -1;
+            stopping = 0;
         }
 
         boolean action(float speed, int directionRed, int directionBlue) {
@@ -1474,7 +1548,7 @@ public class Autonomous extends Hardware
             } else if (ftcConfig.param.colorIsRed){ // if red
                 direction = directionRed;
             }
-
+            telemetry.addData("Gyro Compass Stop", stopping);
             if (state == 1){
                 return false;
             }
@@ -1486,7 +1560,7 @@ public class Autonomous extends Hardware
             heading = sensorGyro.getHeading();
 
             done = false;
-            buffer = 3;
+            buffer = 5;
 //TODO - ONLY reset drive encoders in the INIT
             if (state == -1){
                 reset_drive_encoders();
@@ -1513,11 +1587,13 @@ public class Autonomous extends Hardware
                 if (direction == 0) { // case for if we want to turn to 0
                     if ((heading >= 0 && heading < buffer) || heading > (360 - buffer)) {
                         done = true;
+                        stopping = heading;
                     }
                 }
                 else {
                     if (Math.abs(heading - direction) < buffer) {
                         done = true;
+                        stopping = heading;
                     }
                 }
 
