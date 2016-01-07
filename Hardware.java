@@ -22,8 +22,8 @@ public class Hardware extends OpMode {
     double tab_slapper_in = 0.9D;
     double tab_slapper_out = 0.3D;
 
-    double climber_dropper_in = 0.1D;
-    double climber_dropper_out = 0.95D;
+    double climber_dropper_in = 0.0D;
+    double climber_dropper_out = 1.0D;
     double climber_dropper_mid = 0.4D;
     double climber_dropper_pusher_in = 0.0D;
     double climber_dropper_pusher_out = 1.0D;

@@ -19,29 +19,11 @@ public class ColorSensorTester extends Hardware {
     String color1 = "unknown";
     String color2 = "unknown";
 
-    @Override public void start ()
+    @Override public void init ()
     {
-        super.start();
-        try {
-            firstRGB = hardwareMap.colorSensor.get("mr");
-            firstRGB.setI2cAddress(0x5c);
-            firstRGB.enableLed(false);
-        } catch (Exception p_exception) {
-            m_warning_message("color sensor");
-            DbgLog.msg(p_exception.getLocalizedMessage());
-            firstRGB = null;
-        }
-        try {
-            cdim = hardwareMap.deviceInterfaceModule.get("sensors");
-        } catch (Exception p_exception) {
-            m_warning_message("sensors");
-            DbgLog.msg(p_exception.getLocalizedMessage());
-            cdim = null;
-        }
-
+        super.init();
 
         try {
-
             secondRGB = hardwareMap.colorSensor.get("mr2");
             secondRGB.setI2cAddress(0x4c);
 
@@ -52,15 +34,44 @@ public class ColorSensorTester extends Hardware {
             DbgLog.msg(p_exception.getLocalizedMessage());
             secondRGB = null;
         }
+
+        try {
+            firstRGB = hardwareMap.colorSensor.get("mr");
+            firstRGB.setI2cAddress(0x5c);
+            firstRGB.enableLed(false);
+        } catch (Exception p_exception) {
+            m_warning_message("color sensor");
+            DbgLog.msg(p_exception.getLocalizedMessage());
+            firstRGB = null;
+        }
+
+
+        try {
+            cdim = hardwareMap.deviceInterfaceModule.get("sensors");
+        } catch (Exception p_exception) {
+            m_warning_message("sensors");
+            DbgLog.msg(p_exception.getLocalizedMessage());
+            cdim = null;
+        }
+
+
+    } // init
+
+
+    @Override public void start () {
+        super.start();
+        firstRGB.enableLed(true);
+        secondRGB.enableLed(true);
+
     } // start
+
+
+
 
     public void color()
     {
-        if (gamepad1.y) {
-            firstRGB.enableLed(true);
-        } else {
-            firstRGB.enableLed(false);
-        }
+        firstRGB.enableLed(true);
+        secondRGB.enableLed(true);
 
         Color.RGBToHSV(firstRGB.red() * 8, firstRGB.green() * 8, firstRGB.blue() * 8, hsvValuesFirst);
         telemetry.addData("Clear1", firstRGB.alpha());
@@ -68,11 +79,7 @@ public class ColorSensorTester extends Hardware {
         telemetry.addData("Green1", firstRGB.green());
         telemetry.addData("Blue1 ", firstRGB.blue());
         telemetry.addData("Hue1", hsvValuesFirst[0]);
-        if (gamepad1.x) {
-            secondRGB.enableLed(true);
-        } else {
-            secondRGB.enableLed(false);
-        }
+
         Color.RGBToHSV(secondRGB.red() * 8, secondRGB.green() * 8, secondRGB.blue() * 8, hsvValuesSecond);
         telemetry.addData("Clear2", secondRGB.alpha());
         telemetry.addData("Red2  ", secondRGB.red());
@@ -85,27 +92,21 @@ public class ColorSensorTester extends Hardware {
     @Override public void loop () {
         telemetry.clearData();
         color();
-        if (hsvValuesFirst[0] > 50)
-        {
+        if (hsvValuesFirst[0] > 50) {
             color1 = "blue";
-        } else if (firstRGB.red() > 0)
-        {
+        } else if (firstRGB.red() > 0) {
             color1 = "red";
-        } else
-        {
+        } else {
             color1 = "unknown";
         }
         telemetry.addData("color1", color1);
         update_telemetry(); // Update common telemetry
 
-        if (hsvValuesSecond[0] > 50)
-        {
+        if (hsvValuesSecond[0] > 50) {
             color2 = "blue";
-        } else if (secondRGB.red() > 0)
-        {
+        } else if (secondRGB.red() > 0) {
             color2 = "red";
-        } else
-        {
+        } else {
             color2 = "unknown";
         }
         telemetry.addData("color2", color2);
