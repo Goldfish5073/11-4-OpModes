@@ -32,16 +32,17 @@ public class Hardware extends OpMode {
     double hook_out = 0.9D;
     double hook_increment = 0.05D;
 
+    double hoop_in = 0.2D;
+    double hoop_out = 0.6D;
+
     double debris_in = 0.1D;
     double debris_out = 0.5D;
 
     double ratchet_deployed = 0.6D;
     double ratchet_released = 0.2D;
-    double random_initial = 0.0D;
-    double random_final = 0.5D;
 
-    double debris_mid = 0.65D;
-    double debris_low = 0.1D;
+    double debris_mid = 0.45D;
+    double debris_low = 0.05D; //TODO - double check these values, tube shifted?
     double debris_high = 0.9D;
     double debris_increment = 0.05D;
 
@@ -66,13 +67,7 @@ public class Hardware extends OpMode {
     private DcMotor v_claw;
 
 
-    //private ColorSensor v_sensorRGB;
-
     private DcMotor v_winch;
-
-    private DcMotorController v_drive_controller;
-
-    private DcMotorController v_drive_controller_back;
 
     public Servo v_hook;
 
@@ -83,6 +78,8 @@ public class Hardware extends OpMode {
     public Servo v_ratchet;
 
     public Servo v_dank_debris_dropper;
+
+    public Servo v_hoop;
 
 
 
@@ -97,24 +94,6 @@ public class Hardware extends OpMode {
         //WARNING MESSAGE INTIALIZATION
         v_warning_generated = false;
         v_warning_message = "Can't map; ";
-
-
-
-        //MOTOR CONTROLLERS
-        try {
-            v_drive_controller = hardwareMap.dcMotorController.get ("drive_controller");
-        } catch (Exception p_exception) {
-            m_warning_message ("drive_controller");
-            DbgLog.msg (p_exception.getLocalizedMessage ());
-            v_drive_controller = null;
-        }
-        try {
-            v_drive_controller_back = hardwareMap.dcMotorController.get ("drive_controller_back");
-        } catch (Exception p_exception) {
-            m_warning_message ("drive_controller_back");
-            DbgLog.msg(p_exception.getLocalizedMessage());
-            v_drive_controller_back = null;
-        }
 
 
 
@@ -237,8 +216,14 @@ public class Hardware extends OpMode {
             DbgLog.msg(p_exception.getLocalizedMessage());
             v_ratchet = null;
         }
-
-
+        try {
+            v_hoop = hardwareMap.servo.get("hoop");
+            v_hoop.setPosition(hoop_in);
+        } catch (Exception p_exception) {
+            m_warning_message("ratchet");
+            DbgLog.msg(p_exception.getLocalizedMessage());
+            v_hoop = null;
+        }
 
         reset_drive_encoders ();
         run_using_encoders ();
@@ -323,7 +308,7 @@ public class Hardware extends OpMode {
     }
 
 
-    //TODO - our methods for TeleOp
+
     //////////////////////////////////////////////////////////////////////////////
     //PUSH BEACON
     void push_beacon (boolean isLeft) {
@@ -386,6 +371,24 @@ public class Hardware extends OpMode {
         }
     }
 
+
+    /////////////////////////////////////////////////////////////////////////////
+    //HOOP HOPPER
+    void hoop_in (){
+        if(v_hoop != null) {
+            if (v_hoop.getPosition() > hoop_in) {
+                v_hoop.setPosition(hoop_in);
+            }
+        }
+    }
+    void hoop_out(){
+        if (v_hoop != null) {
+            if (v_hoop.getPosition() < hoop_out) {
+                v_hoop.setPosition(hoop_out);
+            }
+        }
+    }
+
     /////////////////////////////////////////////////////////////////////////////
     //RATCHET
     void ratchet_deploy() {
@@ -432,7 +435,6 @@ public class Hardware extends OpMode {
 
 
 
-    //TODO - TELEMETRY
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //TELEMETRY
     public void set_first_message (String p_message) {
@@ -542,7 +544,7 @@ public class Hardware extends OpMode {
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    //WARNING MESSAGES - PREVENT CRASH - TAKE OUT LATER IF POSSIBLE
+    //WARNING MESSAGES - PREVENT CRASH
     void m_warning_message (String p_exception_message) {
         if (v_warning_generated) {
             v_warning_message += ", ";

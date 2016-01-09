@@ -40,6 +40,10 @@ public class TeleOp extends Hardware {
     left bumper = claws back
     a = winch
     b = winch back
+    dpad left = debris higher
+    dpad right = debris lower
+    dpad up = hoop out
+    dpad down = hoop in
 
     GAMEPAD 2
     left joystick = first arm
@@ -145,6 +149,16 @@ public class TeleOp extends Hardware {
         } else if (gamepad1.x) {
             ratchet_release();
         }
+
+
+        //////////////////////////////////////////////////////////////////////////////
+        //HOOP HOPPER
+        if (gamepad1.dpad_down) {
+            hoop_in();
+        } else if (gamepad1.dpad_up) {
+            hoop_out();
+        }
+
 
         //////////////////////////////////////////////////////////////////////////////
         //CLAW
