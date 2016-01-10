@@ -68,6 +68,7 @@ public class TeleOp extends Hardware {
 
     @Override public void start () {
         ftcConfig.init(hardwareMap.appContext, this);
+        run_without_second_arm_encoder();
     }
 
     @Override public void loop ()
@@ -213,12 +214,12 @@ public class TeleOp extends Hardware {
 
 
         //////////////////////////////////////////////////////////////////////////////
-        // TAB SLAPPER
+       /* // TAB SLAPPER
         if (gamepad2.x){
             tab_slapper_in();
         }else if (gamepad2.y){
             tab_slapper_out();
-        }
+        }*/
 
 
         //////////////////////////////////////////////////////////////////////////////

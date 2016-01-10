@@ -19,8 +19,8 @@ public class Hardware extends OpMode {
     //VARIABLES
     final double diameter = 4;
 
-    double tab_slapper_in = 0.9D;
-    double tab_slapper_out = 0.3D;
+   /* double tab_slapper_in = 0.9D;
+    double tab_slapper_out = 0.3D;*/
 
     double climber_dropper_in = 0.0D;
     double climber_dropper_out = 1.0D;
@@ -57,8 +57,6 @@ public class Hardware extends OpMode {
     private DcMotor v_motor_right_drive;
 
     private DcMotor v_motor_right_drive_back;
-
-    public Servo v_servo_push_beacon;
 
     private DcMotor v_first_arm;
 
@@ -182,7 +180,7 @@ public class Hardware extends OpMode {
             DbgLog.msg (p_exception.getLocalizedMessage ());
             v_hook = null;
         }
-        try
+        /*try
         {
             v_tab_slapper = hardwareMap.servo.get ("tab_slapper");
             v_tab_slapper.setPosition(tab_slapper_in);
@@ -190,15 +188,7 @@ public class Hardware extends OpMode {
             m_warning_message ("tab_slapper");
             DbgLog.msg (p_exception.getLocalizedMessage ());
             v_tab_slapper = null;
-        }
-        try {
-            v_servo_push_beacon = hardwareMap.servo.get ("push_beacon");
-            v_servo_push_beacon.setPosition (1.0D);
-        } catch (Exception p_exception) {
-            m_warning_message ("push_beacon");
-            DbgLog.msg (p_exception.getLocalizedMessage ());
-            v_servo_push_beacon = null;
-        }
+        }*/
         try
         {
             v_climber_dropper = hardwareMap.servo.get ("climber_dropper");
@@ -311,7 +301,7 @@ public class Hardware extends OpMode {
 
     //////////////////////////////////////////////////////////////////////////////
     //PUSH BEACON
-    void push_beacon (boolean isLeft) {
+   /* void push_beacon (boolean isLeft) {
         if (isLeft) {
             v_servo_push_beacon.setPosition (0.0D);
         } else {
@@ -323,7 +313,7 @@ public class Hardware extends OpMode {
         if (v_servo_push_beacon != null) {
             v_servo_push_beacon.setPosition(0.5D);
         }
-    }
+    }*/
 
     //////////////////////////////////////////////////////////////////////////////
     //DEBRIS
@@ -356,7 +346,7 @@ public class Hardware extends OpMode {
 
     //////////////////////////////////////////////////////////////////////////////
     // TAB SLAPPER
-    void tab_slapper_out (){
+   /* void tab_slapper_out (){
         if(v_tab_slapper != null) {
             if (v_tab_slapper.getPosition() > tab_slapper_out) {
                 v_tab_slapper.setPosition(tab_slapper_out);
@@ -369,7 +359,7 @@ public class Hardware extends OpMode {
                 v_tab_slapper.setPosition(tab_slapper_in);
             }
         }
-    }
+    }*/
 
 
     /////////////////////////////////////////////////////////////////////////////
@@ -402,6 +392,14 @@ public class Hardware extends OpMode {
         }
     }
 
+
+
+    /////////////////////////////////////////////////////////////////////////////
+    //SECOND ARM
+    void arm_up(int encodercount) {
+
+        set_second_arm_power(0.3);
+    }
 
     /////////////////////////////////////////////////////////////////////////////
     //CLIMBER DROPPER
@@ -469,9 +467,9 @@ public class Hardware extends OpMode {
         if(v_claw != null){
             telemetry.addData("006", "Claw: " + a_claw_power());
         }
-        if(v_tab_slapper != null) {
+       /* if(v_tab_slapper != null) {
             telemetry.addData("007", "Tab Slapper: " + v_tab_slapper.getPosition());
-        }
+        }*/
         if(v_climber_dropper != null) {
             telemetry.addData("008", "Climber Dropper: " + v_climber_dropper.getPosition());
         }
@@ -600,6 +598,12 @@ public class Hardware extends OpMode {
         }
     } // run_using_right_drive_encoder
 
+    public void run_using_second_arm_encoder() {
+        if (v_second_arm != null) {
+            v_second_arm.setChannelMode( DcMotorController.RunMode.RUN_USING_ENCODERS);
+        }
+    }
+
     public void run_using_encoders () {
         run_using_left_drive_encoder ();
         run_using_right_drive_encoder ();
@@ -624,6 +628,14 @@ public class Hardware extends OpMode {
         }
     } // run_without_right_drive_encoder
 
+    public void run_without_second_arm_encoder() {
+        if (v_second_arm != null) {
+            if (v_second_arm.getChannelMode() == DcMotorController.RunMode.RESET_ENCODERS) {
+                v_second_arm.setChannelMode( DcMotorController.RunMode.RUN_WITHOUT_ENCODERS);
+            }
+        }
+    }
+
     public void run_without_drive_encoders () {
         run_without_left_drive_encoder();
         run_without_right_drive_encoder();
@@ -641,6 +653,12 @@ public class Hardware extends OpMode {
     public void reset_right_drive_encoder () {
         if (v_motor_right_drive_back != null) {
             v_motor_right_drive_back.setChannelMode( DcMotorController.RunMode.RESET_ENCODERS);
+        }
+    } // reset_right_drive_encoder
+
+    public void reset_second_arm_encoder () {
+        if (v_second_arm != null) {
+            v_second_arm.setChannelMode( DcMotorController.RunMode.RESET_ENCODERS);
         }
     } // reset_right_drive_encoder
 
@@ -662,15 +680,23 @@ public class Hardware extends OpMode {
 
     boolean has_right_drive_encoder_reset () {
         boolean l_return = false;
-        if (a_right_encoder_count () == 0) {
+        if (a_right_encoder_count() == 0) {
             l_return = true;
         }
         return l_return;
     } // has_right_drive_encoder_reset
 
+    boolean has_second_arm_encoder_reset () {
+        boolean l_return = false;
+        if (a_second_arm_count() == 0) {
+            l_return = true;
+        }
+        return l_return;
+    } // has_second_arm_encoder_reset
+
     boolean have_drive_encoders_reset () {
         boolean l_return = false;
-        if (has_left_drive_encoder_reset () && has_right_drive_encoder_reset ()) {
+        if (has_left_drive_encoder_reset() && has_right_drive_encoder_reset ()) {
             l_return = true;
         }
         return l_return;
@@ -695,6 +721,13 @@ public class Hardware extends OpMode {
         return l_return;
     } // a_right_encoder_count
 
+    int a_second_arm_count () {
+        int l_return = 0;
+        if (v_second_arm != null) {
+            l_return = (int) Math.abs(v_second_arm.getCurrentPosition ());
+        }
+        return l_return;
+    } // a_right_encoder_count
 
 
     //HAVE REACHED
@@ -712,6 +745,16 @@ public class Hardware extends OpMode {
         boolean l_return = false;
         if (v_motor_right_drive_back != null) {
             if (Math.abs (v_motor_right_drive_back.getCurrentPosition () * (diameter * Math.PI) / 1120) > p_count) {
+                l_return = true;
+            }
+        }
+        return l_return;
+    } // has_right_drive_encoder_reached
+
+    boolean has_second_arm_encoder_reached (double p_count) {
+        boolean l_return = false;
+        if (v_second_arm != null) {
+            if (Math.abs(v_second_arm.getCurrentPosition ()) > p_count) {
                 l_return = true;
             }
         }

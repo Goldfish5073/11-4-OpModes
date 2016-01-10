@@ -15,7 +15,8 @@ public class Autonomous extends Hardware
     float gyroTurnSpeed = 0.3f;
     float grey = 5f;
     float white = 3f;
-    boolean calibrating;
+    String shoulderStartTime;
+    boolean doneCalibrating;
 
 
     public Autonomous()
@@ -111,6 +112,8 @@ public class Autonomous extends Hardware
     GyroTurnCompass gyroTurnCompassToLine = new GyroTurnCompass();
     BeaconAlign beaconAlign = new BeaconAlign();
 
+    MoveShoulder moveBigArmUp = new MoveShoulder();
+
     @Override public void init() {
         super.init();
 
@@ -123,11 +126,15 @@ public class Autonomous extends Hardware
             DbgLog.msg(p_exception.getLocalizedMessage());
             firstRGB = null;
         }
+
+        moveBigArmUp.reset();
     }
 
 
     @Override public void start () {
         super.start();
+
+        doneCalibrating = false;
 
         reset_drive_encoders();
 
@@ -247,6 +254,8 @@ public class Autonomous extends Hardware
         gyroTurnCompassToLine.reset();
         beaconAlign.reset();
 
+        moveBigArmUp.reset();
+
 
     } // start
 
@@ -255,11 +264,15 @@ public class Autonomous extends Hardware
 
     {
         telemetry.clearData();
+
+        //telemetry.addData("000000000 Big Arm Encoder Count", finalArmEncoderCount);
+        telemetry.addData("000000 Cycle Count", shoulderStartTime);
+
         telemetry.addData("ColorIsRed", Boolean.toString(ftcConfig.param.colorIsRed));
         telemetry.addData("DelayInSec", Integer.toString(ftcConfig.param.delayInSec));
         telemetry.addData("AutonType", ftcConfig.param.autonType);
 
-        telemetry.addData("Step: ", step);
+        telemetry.addData("0000000000 Step: ", step);
         telemetry.addData("Heading: ", heading);
         // telemetry.addData("ods",sensorODS.getLightDetected() * 100 );
         telemetry.addData("beacon position", beaconPosition);
@@ -272,12 +285,17 @@ public class Autonomous extends Hardware
         if (sensorGyro.isCalibrating()) {
             return;
         }
+        /*if (sensorGyro.isCalibrating() && !doneCalibrating) {
+            return;
+        } else {
+            doneCalibrating = true;
+        }*/
 
 
         if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_BEACON) {
-            if (moveArmForReset.action(beaconPosition)) {
+            if /*(moveArmForReset.action(beaconPosition)) {
                 step = "move arm 1 to reset";
-            } else if (pauseM.action(1)) {
+            } else if*/ (pauseM.action(1)) {
                 step = "pause";
             } else if (delayBeacon.action()) {
                 step = "delay";
@@ -297,8 +315,10 @@ public class Autonomous extends Hardware
                 step = "color reverse";
             } else if (driveToAlignAfterODS.action(0.2f, getAlignDistance())) { //OUT //amount was getAlignDistance() (3 red and 10 blue)
                 step = "drive forward a little bit to align";
-            } else if (gyroTurnCompassToLine.action(0.2f, 275, 85)) { //should be 270 and 90 not 275 and 85
+            } else if (gyroTurnCompassToLine.action(0.25f, 275, 85)) { //should be 270 and 90 not 275 and 85
                 step = "gyro turn compass to line";
+            } else if (moveBigArmUp.action(0.3f, 80)) {
+                step = "move big arm up";
             } else if (driveToReadBeacon.action(0.2f, getReadDistance())) { //OUT
                 step = "drive forward to read beacon";
             } else if (pauseToReadBeacon.action(1)) {
@@ -320,10 +340,6 @@ public class Autonomous extends Hardware
             } else if (!color.equals("unknown") && driveBackFinal.action(-0.2f, 5)) {
                 step = "drive back final!!!";
             }
-            /*
-            else if (moveArmForTeleOp.action("left")) {
-                step = "move arm for tele op";
-            }*/
         } else if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_MOUNTAIN) {
             if (delayM.action()) {
                 step = "delayM";
@@ -342,7 +358,9 @@ public class Autonomous extends Hardware
             }
 
         }
+
         update_telemetry();
+
     }
 
 
@@ -619,15 +637,16 @@ public class Autonomous extends Hardware
         void reset() {
             state = -1;
         }
+
         boolean action(String beaconPosition){
             if (state == 1) {
                 return false;
             }
             if(!beaconPosition.equals("unknown")){
-                push_beacon(beaconPosition.equals("left"));
+                //push_beacon(beaconPosition.equals("left"));
             }
             else{
-                push_beacon_up();
+                //push_beacon_up();
             }
 
             state = 1;
@@ -1027,6 +1046,50 @@ public class Autonomous extends Hardware
             telemetry.addData("17", "State: " + state);
             telemetry.addData("0000", "b: " + b);
 
+            return true;
+        }
+    }
+
+
+
+
+
+    private class MoveShoulder {
+        int state;
+        int count;
+
+        MoveShoulder() {
+            state = -1;
+            count = 0;
+            shoulderStartTime = "0";
+        }
+
+        void reset() {
+            shoulderStartTime = "0";
+            state = -1;
+            count = 0;
+        }
+
+        boolean action(float armSpeed, double cycleCount) {
+            shoulderStartTime = "" + count;
+            if (state == 1) {
+                return false;
+            }
+            if (state == -1) {
+                count = 0;
+                state = 0;
+                return true;
+            }
+            if (state == 0) {
+                if (count > cycleCount) {
+                    set_second_arm_power(0);
+                    state = 1;
+                } else {
+                    set_second_arm_power(0.2);
+                }
+                count++;
+                return true;
+            }
             return true;
         }
     }
