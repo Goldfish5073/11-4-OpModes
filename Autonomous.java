@@ -15,24 +15,18 @@ public class Autonomous extends Hardware
     float gyroTurnSpeed = 0.3f;
     float grey = 5f;
     float white = 3f;
-    String shoulderStartTime;
     boolean doneCalibrating;
 
-
-    public Autonomous()
-    {
-    }
+    public Autonomous() {}
 
     private String beaconPosition;
     private String color = "";
 
     private ColorSensor firstRGB;
-   // private ColorSensor secondRGB;
     private ColorSensor sensorRGB;
     private GyroSensor sensorGyro;
     private OpticalDistanceSensor sensorODS;
     float hsvValuesFirst[] = {0F,0F,0F};
-    float hsvValuesSecond[] = {0F,0F,0F};
     float hsvValuesSensor[] = {0F,0F,0F};
 
     // hsvValues is an array that will hold the hue, saturation, and value information.
@@ -45,29 +39,18 @@ public class Autonomous extends Hardware
 
     ReadBeacon readBeacon1 = new ReadBeacon();
 
-    MoveArm moveArmForReset = new MoveArm();
-    MoveArm moveArmForBeacon = new MoveArm();
-    MoveArm moveArmForTeleOp = new MoveArm();
-
     Delay delayBeacon = new Delay();
     Delay delayM = new Delay();
-
-    Turn turnToHitBeacon = new Turn(); //NOT CURRENTLY IN USE
 
     DropPusherClimber dropClimbersForButtonPusher = new DropPusherClimber();
     DropClimbersComplete dropClimbersComplete = new DropClimbersComplete();
 
-
-
     DriveStraight initialDriveStraight = new DriveStraight();
-    DriveStraight driveStraightToBeaconZone = new DriveStraight();
     DriveStraight driveFarther = new DriveStraight();
     DriveStraightColor initialDriveStraightColor = new DriveStraightColor();
 
-
-
     Drive driveToPushAwayDebris = new Drive();
-    Drive driveToAlignAfterODS = new Drive();
+    Drive driveToAlign = new Drive();
     Drive driveToReadBeacon = new Drive();
     Drive driveBackToMoveArm = new Drive();
     Drive driveToPressButton = new Drive();
@@ -78,14 +61,9 @@ public class Autonomous extends Hardware
     Drive driveBackAfterReadBeacon = new Drive();
 
 
-
     Drive driveM_ToMountain = new Drive();
     Drive driveM_OntoMountain = new Drive();
     Drive driveM_BackToAlign = new Drive();
-
-    Drive drive1 = new Drive(); //NOT CURRENTLY IN USE
-    Drive driveButton1 = new Drive(); //NOT CURRENTLY IN USE
-    Drive driveButton2 = new Drive(); //NOT CURRENTLY IN USE
 
 
     ODSReverse odsReverseBeacon = new ODSReverse();
@@ -150,17 +128,6 @@ public class Autonomous extends Hardware
             sensorRGB = null;
         }
 
-
-
-       /* try {
-            cdim = hardwareMap.deviceInterfaceModule.get("sensors");
-        } catch (Exception p_exception) {
-            m_warning_message("sensors");
-            DbgLog.msg(p_exception.getLocalizedMessage());
-            cdim = null;
-        }*/
-
-
         try {
             sensorGyro = hardwareMap.gyroSensor.get("gyro");
         } catch (Exception p_exception) {
@@ -168,41 +135,32 @@ public class Autonomous extends Hardware
             DbgLog.msg(p_exception.getLocalizedMessage());
             sensorGyro = null;
         }
-        try {
+
+       /* try {
             sensorODS = hardwareMap.opticalDistanceSensor.get("ODS");
         } catch (Exception p_exception) {
             m_warning_message("ods sensor");
             DbgLog.msg(p_exception.getLocalizedMessage());
             sensorODS = null;
-        }
+        }*/
 
         update_telemetry();
 
 
         ftcConfig.init(hardwareMap.appContext, this);
 
-        // //sensorRGB = hardwareMap.colorSensor.get("mr");
         sensorGyro.resetZAxisIntegrator();
         sensorGyro.calibrate();
         firstRGB.enableLed(true);
-       // secondRGB.enableLed(true);
-
 
         readBeacon1.reset();
-
-        moveArmForReset.reset();
-        moveArmForBeacon.reset();
-        moveArmForTeleOp.reset();
 
         delayBeacon.reset();
 
         delayM.reset();
 
-        turnToHitBeacon.reset();
-        //toBeacon.reset();
-        drive1.reset();
         driveToPushAwayDebris.reset();
-        driveToAlignAfterODS.reset();
+        driveToAlign.reset();
         driveToReadBeacon.reset();
         driveBackToMoveArm.reset();
         driveToPressButton.reset();
@@ -219,7 +177,6 @@ public class Autonomous extends Hardware
         colorReverse.reset();
 
         gyroTurnToPushAwayDebris.reset();
-        //gyroTurnToFaceBeacon.reset();
         gyroTurnM_ToFaceMountain.reset();
         initialGyroTurn.reset();
 
@@ -235,17 +192,11 @@ public class Autonomous extends Hardware
 
         pauseGyro.reset();
 
-        driveButton1.reset();
-        driveButton2.reset();
-
         driveBackAfterReadBeacon.reset();
 
 
         dropClimbersForButtonPusher.reset();
         dropClimbersComplete.reset();
-
-
-        driveStraightToBeaconZone.reset();
         initialDriveStraight.reset();
         driveFarther.reset();
         initialDriveStraightColor.reset();
@@ -264,9 +215,6 @@ public class Autonomous extends Hardware
 
     {
         telemetry.clearData();
-
-        //telemetry.addData("000000000 Big Arm Encoder Count", finalArmEncoderCount);
-        telemetry.addData("000000 Cycle Count", shoulderStartTime);
 
         telemetry.addData("ColorIsRed", Boolean.toString(ftcConfig.param.colorIsRed));
         telemetry.addData("DelayInSec", Integer.toString(ftcConfig.param.delayInSec));
@@ -293,9 +241,7 @@ public class Autonomous extends Hardware
 
 
         if (ftcConfig.param.autonType == ftcConfig.param.autonType.GO_FOR_BEACON) {
-            if /*(moveArmForReset.action(beaconPosition)) {
-                step = "move arm 1 to reset";
-            } else if*/ (pauseM.action(1)) {
+            if (pauseM.action(1)) {
                 step = "pause";
             } else if (delayBeacon.action()) {
                 step = "delay";
@@ -313,9 +259,9 @@ public class Autonomous extends Hardware
                 step = "drive to push away debris";
             } else if (colorReverse.action(-0.2f)) {
                 step = "color reverse";
-            } else if (driveToAlignAfterODS.action(0.2f, getAlignDistance())) { //OUT //amount was getAlignDistance() (3 red and 10 blue)
+            } else if (driveToAlign.action(0.2f, getAlignDistance())) { //OUT //amount was getAlignDistance() (3 red and 10 blue)
                 step = "drive forward a little bit to align";
-            } else if (gyroTurnCompassToLine.action(0.25f, 275, 85)) { //should be 270 and 90 not 275 and 85
+            } else if (gyroTurnCompassToLine.action(getGyroTurnSpeed(), 275, 82)) { //should be 270 and 90 not 275 and 85
                 step = "gyro turn compass to line";
             } else if (moveBigArmUp.action(0.3f, 80)) {
                 step = "move big arm up";
@@ -383,7 +329,15 @@ public class Autonomous extends Hardware
         if (ftcConfig.param.colorIsRed) {
             return 4;
         } else {
-            return 5; //maybe should 9
+            return 8; //maybe should 9
+        }
+    }
+
+    public float getGyroTurnSpeed() { //TODO - may have to change back to just normal
+        if (ftcConfig.param.colorIsRed) {
+            return 0.25f;
+        } else {
+            return 0.45f; //maybe should 9
         }
     }
 
@@ -629,30 +583,6 @@ public class Autonomous extends Hardware
     }
 
 
-    private class MoveArm { //move the beacon bumper
-        int state;
-        MoveArm(){
-            state = -1;
-        }
-        void reset() {
-            state = -1;
-        }
-
-        boolean action(String beaconPosition){
-            if (state == 1) {
-                return false;
-            }
-            if(!beaconPosition.equals("unknown")){
-                //push_beacon(beaconPosition.equals("left"));
-            }
-            else{
-                //push_beacon_up();
-            }
-
-            state = 1;
-            return true;
-        }
-    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
 //DRIVE STRAIGHT
@@ -1061,17 +991,14 @@ public class Autonomous extends Hardware
         MoveShoulder() {
             state = -1;
             count = 0;
-            shoulderStartTime = "0";
         }
 
         void reset() {
-            shoulderStartTime = "0";
             state = -1;
             count = 0;
         }
 
         boolean action(float armSpeed, double cycleCount) {
-            shoulderStartTime = "" + count;
             if (state == 1) {
                 return false;
             }

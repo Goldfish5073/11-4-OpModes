@@ -22,29 +22,29 @@ public class Hardware extends OpMode {
    /* double tab_slapper_in = 0.9D;
     double tab_slapper_out = 0.3D;*/
 
-    double climber_dropper_in = 0.0D;
-    double climber_dropper_out = 1.0D;
-    double climber_dropper_mid = 0.4D;
-    double climber_dropper_pusher_in = 0.0D;
-    double climber_dropper_pusher_out = 1.0D;
+    final double climber_dropper_in = 0.0D;
+    final double climber_dropper_out = 1.0D;
+    final double climber_dropper_mid = 0.4D;
+    final double climber_dropper_pusher_in = 0.0D;
+    final double climber_dropper_pusher_out = 1.0D;
 
-    double hook_in = 0.1D;
-    double hook_out = 0.9D;
+    final double hook_in = 0.1D;
+    final double hook_out = 0.9D;
     double hook_increment = 0.05D;
 
-    double hoop_in = 0.2D;
-    double hoop_out = 0.6D;
+    final double hoop_in = 0.2D;
+    final double hoop_out = 0.6D;
 
-    double debris_in = 0.1D;
-    double debris_out = 0.5D;
+    final double debris_in = 0.1D;
+    final double debris_out = 0.5D;
 
-    double ratchet_deployed = 0.6D;
-    double ratchet_released = 0.2D;
+    final double ratchet_deployed = 0.6D;
+    final double ratchet_released = 0.2D;
 
-    double debris_mid = 0.45D;
-    double debris_low = 0.05D; //TODO - double check these values, tube shifted?
-    double debris_high = 0.9D;
-    double debris_increment = 0.05D;
+    final double debris_mid = 0.45D;
+    final double debris_low = 0.05D; //TODO - double check these values, tube shifted?
+    final double debris_high = 0.9D;
+    final double debris_increment = 0.05D;
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -297,23 +297,6 @@ public class Hardware extends OpMode {
         }
     }
 
-
-
-    //////////////////////////////////////////////////////////////////////////////
-    //PUSH BEACON
-   /* void push_beacon (boolean isLeft) {
-        if (isLeft) {
-            v_servo_push_beacon.setPosition (0.0D);
-        } else {
-            v_servo_push_beacon.setPosition(1.0D);
-        }
-    }
-
-    void push_beacon_up(){
-        if (v_servo_push_beacon != null) {
-            v_servo_push_beacon.setPosition(0.5D);
-        }
-    }*/
 
     //////////////////////////////////////////////////////////////////////////////
     //DEBRIS

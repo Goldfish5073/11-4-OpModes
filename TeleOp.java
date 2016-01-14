@@ -87,17 +87,17 @@ public class TeleOp extends Hardware {
         double speed = driveSpeeds[driveScale];
         //^ negative because robot goes backwards compared to original testing bot
 
-        if (Range.clip(-gamepad1.left_stick_y, -1, 1) > 0.1) {
+        if (Range.clip(-gamepad1.left_stick_y, -1, 1) > 0.4) {
             set_left_power(speed);
-        } else if (Range.clip(-gamepad1.left_stick_y, -1, 1) < -0.1) {
+        } else if (Range.clip(-gamepad1.left_stick_y, -1, 1) < -0.4) {
             set_left_power(-speed);
         } else {
             set_left_power(0.0);
         }
         //RIGHT
-        if(Range.clip(-gamepad1.right_stick_y, -1, 1) > 0.1) {
+        if(Range.clip(-gamepad1.right_stick_y, -1, 1) > 0.4) {
             set_right_power(speed);
-        } else if (Range.clip(-gamepad1.right_stick_y, -1, 1) < -0.1) {
+        } else if (Range.clip(-gamepad1.right_stick_y, -1, 1) < -0.4) {
             set_right_power(-speed);
         } else {
             set_right_power(0.0);
@@ -109,33 +109,33 @@ public class TeleOp extends Hardware {
         //FIRST
         //SWITCH LEFT AND RIGHT FOR JIM -- and start controller as start x?
         if(ftcConfig.param.secondDriverIsZach) {
-            if (Range.clip(gamepad2.left_stick_y, -1, 1) > 0.1) {
+            if (Range.clip(gamepad2.left_stick_y, -1, 1) > 0.4) {
                 set_first_arm_power(firstArmSpeed);
-            } else if (Range.clip(gamepad2.left_stick_y, -1, 1) < -0.1) {
+            } else if (Range.clip(gamepad2.left_stick_y, -1, 1) < -0.4) {
                 set_first_arm_power(-firstArmSpeedBack);
             } else {
                 set_first_arm_power(0.0);
             }
             //SECOND
-            if (Range.clip(-gamepad2.right_stick_y, -1, 1) > 0.1) {
+            if (Range.clip(-gamepad2.right_stick_y, -1, 1) > 0.4) {
                 set_second_arm_power(secondArmSpeed);
-            } else if (Range.clip(-gamepad2.right_stick_y, -1, 1) < -0.1) {
+            } else if (Range.clip(-gamepad2.right_stick_y, -1, 1) < -0.4) {
                 set_second_arm_power(-secondArmSpeedBack);
             } else {
                 set_second_arm_power(0.0);
             }
         } else {
-            if (Range.clip(gamepad2.right_stick_y, -1, 1) > 0.1) {
+            if (Range.clip(gamepad2.right_stick_y, -1, 1) > 0.4) {
                 set_first_arm_power(firstArmSpeed);
-            } else if (Range.clip(gamepad2.right_stick_y, -1, 1) < -0.1) {
+            } else if (Range.clip(gamepad2.right_stick_y, -1, 1) < -0.4) {
                 set_first_arm_power(-firstArmSpeedBack);
             } else {
                 set_first_arm_power(0.0);
             }
             //SECOND
-            if (Range.clip(-gamepad2.left_stick_y, -1, 1) > 0.1) {
+            if (Range.clip(-gamepad2.left_stick_y, -1, 1) > 0.4) {
                 set_second_arm_power(secondArmSpeed);
-            } else if (Range.clip(-gamepad2.left_stick_y, -1, 1) < -0.1) {
+            } else if (Range.clip(-gamepad2.left_stick_y, -1, 1) < -0.4) {
                 set_second_arm_power(-secondArmSpeedBack);
             } else {
                 set_second_arm_power(0.0);
